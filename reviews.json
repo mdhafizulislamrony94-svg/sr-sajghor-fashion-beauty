@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1788988820115,
+    "productId": 1788970156662,
+    "productName": "mangos ",
+    "rating": 4,
+    "review": "fdgdsgs fgs sf",
+    "createdAt": "2026-09-09T21:20:20.115Z"
+  },
+  {
+    "id": 1789152744407,
+    "productId": 1789152558139,
+    "productName": "Lipsticks ",
+    "rating": 4,
+    "review": "o...",
+    "createdAt": "2026-09-11T18:52:24.407Z"
+  },
+  {
+    "id": 1789166460029,
+    "productId": 1788970156662,
+    "productName": "mangos ",
+    "rating": 4,
+    "review": "okjh",
+    "createdAt": "2026-09-11T22:41:00.029Z"
+  },
+  {
+    "id": 1789242126585,
+    "productId": 1789241937355,
+    "productName": "good",
+    "rating": 5,
+    "review": "oyouu",
+    "createdAt": "2026-09-12T19:42:06.585Z"
+  },
+  {
+    "id": 1789322248750,
+    "productId": 1789241937355,
+    "productName": "good",
+    "rating": 3,
+    "review": "khfg",
+    "createdAt": "2026-09-13T17:57:28.750Z"
+  }
+]

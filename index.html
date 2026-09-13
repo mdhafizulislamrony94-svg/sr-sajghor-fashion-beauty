@@ -1,0 +1,3502 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SR Sajghor | Fashion & Beauty</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Noto Sans Bengali", Arial, sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: #fff8fc;
+            color: #29202a;
+        }
+
+        /* ================= HEADER ================= */
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 999;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 14px 6%;
+
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(12px);
+
+            box-shadow: 0 4px 20px rgba(130, 40, 100, 0.12);
+        }
+
+        .logo {
+            font-size: 25px;
+            font-weight: 800;
+
+            background: linear-gradient(
+                90deg,
+                #d4145a,
+                #8e2de2,
+                #d4a017
+            );
+
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        nav {
+            display: flex;
+            gap: 25px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #3d3340;
+            font-size: 15px;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        nav a:hover {
+            color: #d4145a;
+            transform: translateY(-2px);
+        }
+
+        .cart {
+            position: relative;
+            font-size: 23px;
+            cursor: pointer;
+        }
+
+        .cart span {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+
+            /* ================= WISHLIST HEADER ================= */
+
+.wishlist {
+    position: relative;
+    font-size: 23px;
+    cursor: pointer;
+    z-index: 1000;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 35px;
+    min-height: 35px;
+}
+
+.wishlist span {
+    position: absolute;
+    top: -8px;
+    right: -10px;
+
+    width: 20px;
+    height: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #d4145a;
+    color: white;
+
+    border-radius: 50%;
+    font-size: 11px;
+    pointer-events: none;
+}
+
+            width: 20px;
+            height: 20px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #d4145a;
+            color: white;
+
+            border-radius: 50%;
+            font-size: 11px;
+        }
+
+        /* ================= HERO ================= */
+
+        .hero {
+            min-height: 560px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            text-align: center;
+
+            padding: 70px 20px;
+
+            background:
+                radial-gradient(circle at 15% 20%, #ffd6ea 0, transparent 30%),
+                radial-gradient(circle at 85% 80%, #dfc9ff 0, transparent 32%),
+                linear-gradient(135deg, #fff0f8, #f6edff, #fff9eb);
+
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before,
+        .hero::after {
+            content: "✦";
+
+            position: absolute;
+
+            font-size: 90px;
+
+            color: rgba(212,160,23,0.18);
+
+            animation: floating 4s infinite ease-in-out;
+        }
+
+        .hero::before {
+            top: 60px;
+            left: 8%;
+        }
+
+        .hero::after {
+            bottom: 40px;
+            right: 8%;
+            animation-delay: 1s;
+        }
+
+        @keyframes floating {
+            0%,100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-15px) rotate(10deg);
+            }
+        }
+
+        .hero-content {
+            max-width: 850px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .welcome {
+            display: inline-block;
+
+            padding: 8px 18px;
+            margin-bottom: 18px;
+
+            border-radius: 30px;
+
+            background: rgba(255,255,255,0.8);
+
+            color: #8e2de2;
+
+            font-size: 14px;
+            font-weight: bold;
+
+            box-shadow: 0 5px 20px rgba(100,40,120,0.10);
+        }
+
+        .hero h1 {
+            font-size: clamp(38px, 6vw, 68px);
+            line-height: 1.15;
+
+            margin-bottom: 20px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #d4145a,
+                    #8e2de2,
+                    #b8860b
+                );
+
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero h1 span {
+            display: block;
+            font-size: 0.55em;
+            margin-top: 10px;
+        }
+
+        .hero p {
+            max-width: 650px;
+            margin: auto;
+
+            font-size: 18px;
+            line-height: 1.8;
+
+            color: #5c4b5b;
+        }
+
+        .shop-btn {
+            display: inline-block;
+
+            margin-top: 30px;
+
+            padding: 15px 34px;
+
+            border-radius: 35px;
+
+            text-decoration: none;
+
+            color: white;
+
+            font-size: 17px;
+            font-weight: bold;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #d4145a,
+                    #8e2de2
+                );
+
+            box-shadow:
+                0 10px 25px rgba(142,45,226,0.25);
+
+            transition: 0.3s;
+        }
+
+        .shop-btn:hover {
+            transform: translateY(-4px) scale(1.03);
+
+            box-shadow:
+                0 15px 35px rgba(142,45,226,0.35);
+        }
+
+        /* ================= SECTION ================= */
+
+        .section {
+            padding: 75px 6%;
+            text-align: center;
+        }
+
+        .section-title {
+            display: inline-block;
+
+            font-size: 34px;
+
+            margin-bottom: 12px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #d4145a,
+                    #8e2de2
+                );
+
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section-subtitle {
+            color: #806f80;
+            margin-bottom: 38px;
+        }
+
+        /* ================= CATEGORY ================= */
+
+        .categories {
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 25px;
+
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .category {
+            position: relative;
+
+            background: white;
+
+            padding: 38px 25px;
+
+            border-radius: 22px;
+
+            border: 1px solid #f3d8e9;
+
+            box-shadow:
+                0 8px 30px rgba(130,40,100,0.08);
+
+            transition: 0.35s;
+
+            overflow: hidden;
+        }
+
+        .category::before {
+            content: "";
+
+            position: absolute;
+
+            top: 0;
+            left: 0;
+
+            width: 100%;
+            height: 5px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #d4145a,
+                    #8e2de2,
+                    #d4a017
+                );
+        }
+
+        .category:hover {
+            transform: translateY(-8px);
+
+            box-shadow:
+                0 18px 40px rgba(130,40,100,0.15);
+        }
+
+        .category .icon {
+            font-size: 58px;
+            margin-bottom: 18px;
+        }
+
+        .category h3 {
+            color: #d4145a;
+            font-size: 21px;
+            margin-bottom: 10px;
+        }
+
+        .category p {
+            color: #746774;
+            line-height: 1.6;
+        }
+
+        /* ================= PRODUCTS ================= */
+
+        .products {
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
+            gap: 25px;
+
+            max-width: 1250px;
+            margin: auto;
+        }
+
+        .product {
+            background: white;
+
+            border-radius: 20px;
+
+            overflow: hidden;
+
+            border: 1px solid #f2dce9;
+
+            box-shadow:
+                0 8px 25px rgba(120,30,90,0.08);
+
+            transition: 0.35s;
+
+            text-align: left;
+        }
+
+        .product:hover {
+            transform: translateY(-8px);
+
+            box-shadow:
+                0 18px 40px rgba(120,30,90,0.16);
+        }
+
+        .product-image {
+            height: 245px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ffe1ef,
+                    #eee1ff
+                );
+
+            overflow: hidden;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+
+            object-fit: cover;
+
+            transition: 0.5s;
+        }
+
+        .product:hover .product-image img {
+            transform: scale(1.06);
+        }
+
+        .no-image {
+            font-size: 65px;
+        }
+
+        .product-info {
+            padding: 20px;
+        }
+
+        .product-info h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .category-name {
+            color: #8e2de2;
+            font-size: 13px;
+            margin-bottom: 9px;
+        }
+
+        .price {
+            color: #d4145a;
+
+            font-size: 21px;
+            font-weight: 800;
+
+            margin-top: 8px;
+        }
+
+        .stock {
+            font-size: 13px;
+            color: #687568;
+            margin-top: 8px;
+        }
+
+        .description {
+            font-size: 13px;
+
+            color: #766b76;
+
+            margin-top: 9px;
+
+            line-height: 1.5;
+        }
+
+        .order-btn {
+            width: 100%;
+
+            margin-top: 15px;
+
+            padding: 12px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #d4145a,
+                    #8e2de2
+                );
+
+            color: white;
+
+            font-size: 15px;
+            font-weight: bold;
+
+            cursor: pointer;
+
+            transition: 0.3s;
+        }
+
+        .order-btn:hover {
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 8px 20px rgba(142,45,226,0.25);
+        }
+
+        .loading {
+            grid-column: 1 / -1;
+
+            text-align: center;
+
+            font-size: 17px;
+
+            color: #777;
+
+            padding: 40px;
+        }
+
+        /* ================= FOOTER ================= */
+
+        footer {
+            position: relative;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #32142d,
+                    #4d1647,
+                    #24152f
+                );
+
+            color: white;
+
+            text-align: center;
+
+            padding: 50px 20px;
+
+            margin-top: 30px;
+        }
+
+        footer h2 {
+            color: #ffd76a;
+            margin-bottom: 15px;
+        }
+
+        footer p {
+            margin: 9px;
+            color: #f5dce9;
+        }
+
+        .footer-phone {
+            font-size: 17px;
+            font-weight: bold;
+        }
+
+        /* ================= MOBILE ================= */
+
+        @media (max-width: 900px) {
+
+            .products {
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+
+            .categories {
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 700px) {
+
+            header {
+                padding: 13px 4%;
+            }
+
+            .logo {
+                font-size: 21px;
+            }
+
+            nav {
+                gap: 10px;
+            }
+
+            nav a {
+                font-size: 12px;
+            }
+
+            .cart {
+                font-size: 20px;
+            }
+
+            .hero {
+                min-height: 500px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .section {
+                padding: 55px 5%;
+            }
+
+            .section-title {
+                font-size: 29px;
+            }
+        }
+
+        @media (max-width: 500px) {
+
+            header {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 12px;
+            }
+
+            nav {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .categories {
+                grid-template-columns: 1fr;
+            }
+
+            .products {
+                grid-template-columns: 1fr;
+            }
+
+            .product-image {
+                height: 280px;
+            }
+        }
+        /* ================= CART PANEL ================= */
+
+.cart-panel {
+    position: fixed;
+    top: 0;
+    right: -420px;
+
+    width: 400px;
+    max-width: 90%;
+
+    height: 100vh;
+
+    background: white;
+
+    z-index: 2000;
+
+    box-shadow: -10px 0 35px rgba(0,0,0,0.18);
+
+    transition: 0.4s;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.cart-panel.active {
+    right: 0;
+}
+
+.cart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 20px;
+
+    background: linear-gradient(
+        135deg,
+        #d4145a,
+        #8e2de2
+    );
+
+    color: white;
+}
+
+.cart-header h2 {
+    font-size: 21px;
+}
+
+.cart-header button {
+    border: none;
+
+    background: rgba(255,255,255,0.2);
+
+    color: white;
+
+    width: 35px;
+    height: 35px;
+
+    border-radius: 50%;
+
+    font-size: 18px;
+
+    cursor: pointer;
+}
+
+.cart-items {
+    flex: 1;
+
+    overflow-y: auto;
+
+    padding: 20px;
+}
+
+.cart-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    padding: 15px 0;
+
+    border-bottom: 1px solid #eee;
+}
+
+.cart-item-info {
+    flex: 1;
+}
+
+.cart-item-info h4 {
+    font-size: 15px;
+    margin-bottom: 5px;
+}
+
+.cart-item-info p {
+    color: #d4145a;
+    font-weight: bold;
+}
+
+.remove-btn {
+    border: none;
+
+    background: #ffe5ed;
+
+    color: #d4145a;
+
+    padding: 7px 10px;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+}
+
+.cart-footer {
+    padding: 20px;
+
+    border-top: 1px solid #eee;
+
+    background: #fff8fc;
+}
+
+.cart-total {
+    font-size: 19px;
+
+    margin-bottom: 15px;
+}
+
+.cart-total strong {
+    color: #d4145a;
+}
+
+.checkout-btn {
+    width: 100%;
+
+    padding: 14px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: linear-gradient(
+        135deg,
+        #d4145a,
+        #8e2de2
+    );
+
+    color: white;
+
+    font-size: 16px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.checkout-btn:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 8px 20px rgba(142,45,226,0.25);
+}
+
+/* Mobile */
+
+@media (max-width: 500px) {
+
+    .cart-panel {
+        width: 100%;
+        max-width: 100%;
+    }
+
+}
+
+/* ================= ORDER FORM ================= */
+
+.order-form-panel {
+    position: fixed;
+    top: 0;
+    right: -450px;
+
+    width: 420px;
+    max-width: 95%;
+
+    height: 100vh;
+
+    background: white;
+
+    z-index: 9999;
+
+    box-shadow: -5px 0 20px rgba(0,0,0,0.15);
+
+    transition: 0.3s;
+
+    overflow-y: auto;
+
+    padding: 20px;
+}
+
+.order-form-panel.active {
+    right: 0;
+}
+
+
+.order-form-header {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 25px;
+
+    border-bottom: 1px solid #eee;
+
+    padding-bottom: 15px;
+}
+
+
+.order-form-header h2 {
+    color: #d81b72;
+
+    font-size: 24px;
+}
+
+
+.order-form-header button {
+    border: none;
+
+    background: #f5f5f5;
+
+    width: 35px;
+
+    height: 35px;
+
+    border-radius: 50%;
+
+    cursor: pointer;
+
+    font-size: 18px;
+}
+
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+
+.form-group label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    font-weight: bold;
+
+    color: #444;
+}
+
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 12px;
+
+    border: 1px solid #ddd;
+
+    border-radius: 8px;
+
+    font-size: 15px;
+
+    outline: none;
+}
+
+
+.form-group textarea {
+    min-height: 90px;
+
+    resize: vertical;
+}
+
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #d81b72;
+}
+
+
+.order-summary {
+    background: #fff5fa;
+
+    border-radius: 10px;
+
+    padding: 15px;
+
+    margin: 20px 0;
+}
+
+
+.order-summary h3 {
+    color: #d81b72;
+
+    margin-bottom: 12px;
+}
+
+
+.order-summary p {
+    margin: 8px 0;
+}
+
+
+.confirm-order-btn {
+    width: 100%;
+
+    padding: 14px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: #d81b72;
+
+    color: white;
+
+    font-size: 17px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+
+.confirm-order-btn:hover {
+    opacity: 0.9;
+}
+
+
+@media (max-width: 600px) {
+
+    .order-form-panel {
+        width: 100%;
+
+        max-width: 100%;
+
+        right: -100%;
+    }
+
+}
+
+/* PRODUCT DETAILS MODAL */
+.product-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 10000;
+}
+
+.product-modal.active {
+    display: flex;
+}
+
+.product-modal-content {
+    width: 100%;
+    max-width: 650px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 20px;
+    padding: 25px;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+}
+
+.product-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 50%;
+    background: #f5e6ef;
+    color: #d4145a;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.product-modal-image {
+    width: 100%;
+    height: 300px;
+    border-radius: 15px;
+    overflow: hidden;
+    background: linear-gradient(135deg,#ffe1ef,#eee1ff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.product-modal-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-modal-image .no-image {
+    font-size: 75px;
+}
+
+.product-modal-content h2 {
+    color: #d4145a;
+    margin-bottom: 8px;
+}
+
+.product-modal-price {
+    color: #d4145a;
+    font-size: 24px;
+    font-weight: 800;
+    margin: 10px 0;
+}
+
+.product-modal-stock {
+    color: #687568;
+    margin-bottom: 10px;
+}
+
+.product-modal-description {
+    color: #766b76;
+    line-height: 1.7;
+    margin-bottom: 20px;
+}
+
+.product-modal-cart-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg,#d4145a,#8e2de2);
+    color: white;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+@media(max-width:500px) {
+    .product-modal {
+        padding: 10px;
+    }
+
+    .product-modal-content {
+        padding: 20px;
+    }
+
+    .product-modal-image {
+        height: 240px;
+    }
+}
+
+/* ================= SEARCH + FILTER ================= */
+
+.product-tools {
+    max-width: 1250px;
+    margin: 0 auto 30px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+}
+
+.product-tools input {
+    flex: 1;
+    max-width: 600px;
+    padding: 15px 20px;
+    border: 2px solid #f0c8dc;
+    border-radius: 14px;
+    outline: none;
+    font-size: 16px;
+    background: #fff;
+    transition: 0.3s;
+}
+
+.product-tools input:focus {
+    border-color: #d4145a;
+    box-shadow: 0 0 0 4px rgba(212,20,90,0.08);
+}
+
+.product-tools select {
+    padding: 15px 18px;
+    border: 2px solid #f0c8dc;
+    border-radius: 14px;
+    outline: none;
+    background: #fff;
+    color: #555;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.product-tools select:focus {
+    border-color: #8e2de2;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+
+    .product-tools {
+        flex-direction: column;
+        padding: 0 15px;
+    }
+
+    .product-tools input,
+    .product-tools select {
+        width: 100%;
+        max-width: none;
+        box-sizing: border-box;
+    }
+}
+/* ================= WISHLIST BUTTON ================= */
+
+.wishlist-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    font-size: 22px;
+    cursor: pointer;
+    z-index: 5;
+    transition: 0.25s;
+}
+
+.wishlist-btn:hover {
+    transform: scale(1.12);
+}
+
+.product {
+    position: relative;
+}
+
+/* ================= WISHLIST PANEL ================= */
+
+.wishlist-panel {
+    position: fixed;
+    top: 0;
+    right: -420px;
+    width: 400px;
+    height: 100vh;
+    background: #fff;
+    z-index: 10001;
+    box-shadow: -5px 0 25px rgba(0,0,0,0.15);
+    transition: 0.35s ease;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.wishlist-panel.active {
+    right: 0;
+}
+
+.wishlist-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f5dce8;
+}
+
+.wishlist-header h2 {
+    color: #d4145a;
+    font-size: 22px;
+}
+
+.wishlist-header button {
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 50%;
+    background: #f9e8f0;
+    color: #d4145a;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.wishlist-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 14px;
+    background: #fff8fc;
+    border: 1px solid #f3dce8;
+}
+
+.wishlist-item-image {
+    width: 65px;
+    height: 65px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #f5e5ee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    flex-shrink: 0;
+}
+
+.wishlist-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.wishlist-item-info {
+    flex: 1;
+}
+
+.wishlist-item-info h4 {
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.wishlist-item-price {
+    color: #d4145a;
+    font-weight: bold;
+}
+
+.wishlist-remove {
+    border: none;
+    background: #ffe7ee;
+    color: #d4145a;
+    border-radius: 8px;
+    padding: 7px 9px;
+    cursor: pointer;
+}
+
+.empty-wishlist {
+    text-align: center;
+    color: #888;
+    padding: 40px 10px;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+
+    .wishlist-panel {
+        width: 100%;
+        right: -100%;
+    }
+
+}
+
+/* ================= PRODUCT REVIEW ================= */
+
+.product-review-box {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 2px solid #f5dce8;
+}
+
+.product-review-box h3 {
+    color: #d4145a;
+    margin-bottom: 12px;
+}
+
+.review-stars {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.review-stars button {
+    border: none;
+    background: transparent;
+    color: #ccc;
+    font-size: 32px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.review-stars button:hover {
+    transform: scale(1.15);
+}
+
+.review-stars button.selected {
+    color: #f5b400;
+}
+
+#reviewText {
+    width: 100%;
+    min-height: 90px;
+    padding: 12px;
+    border: 2px solid #f0c8dc;
+    border-radius: 12px;
+    outline: none;
+    resize: vertical;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 15px;
+}
+
+#reviewText:focus {
+    border-color: #d4145a;
+}
+
+.review-submit-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 13px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #d4145a, #8e2de2);
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* ================= PRODUCT REVIEW ================= */
+
+.product-review-box {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 2px solid #f5dce8;
+}
+
+.product-review-box h3 {
+    color: #d4145a;
+    margin-bottom: 12px;
+}
+
+.saved-reviews {
+    margin-bottom: 18px;
+}
+
+.saved-review {
+    background: #fff8fc;
+    border: 1px solid #f3dce8;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.saved-review-stars {
+    color: #f5b400;
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
+.saved-review-text {
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 5px;
+}
+
+.saved-review-date {
+    color: #999;
+    font-size: 12px;
+}
+
+.no-reviews {
+    text-align: center;
+    color: #888;
+    padding: 15px 5px;
+}
+
+.review-stars {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.review-stars button {
+    border: none;
+    background: transparent;
+    color: #ccc;
+    font-size: 32px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.review-stars button:hover {
+    transform: scale(1.15);
+}
+
+.review-stars button.selected {
+    color: #f5b400;
+}
+
+#reviewText {
+    width: 100%;
+    min-height: 90px;
+    padding: 12px;
+    border: 2px solid #f0c8dc;
+    border-radius: 12px;
+    outline: none;
+    resize: vertical;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 15px;
+}
+
+#reviewText:focus {
+    border-color: #d4145a;
+}
+
+.review-submit-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 13px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #d4145a, #8e2de2);
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* ================= PRODUCT CONFIRM NOTIFICATION ================= */
+
+.product-confirm-notification {
+    margin: 10px 15px 0;
+    padding: 10px 12px;
+    background: linear-gradient(135deg, #fff0f6, #f3e8ff);
+    border: 1px solid #e8b8d5;
+    border-radius: 10px;
+    color: #d4145a;
+    font-size: 13px;
+    font-weight: bold;
+    text-align: center;
+    animation: productNotify 0.5s ease;
+}
+
+@keyframes productNotify {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ================= VIDEO GALLERY ================= */
+
+.video-section {
+    padding: 50px 6%;
+    background: #fff8fc;
+    text-align: center;
+}
+
+.video-section h2 {
+    color: #d4145a;
+    margin-bottom: 25px;
+    font-size: 28px;
+}
+
+.video-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 22px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.video-card {
+    background: white;
+    padding: 12px;
+    border-radius: 18px;
+    box-shadow: 0 8px 25px rgba(120, 30, 90, 0.12);
+    border: 1px solid #f2dce9;
+}
+
+.video-card video {
+    width: 100%;
+    border-radius: 12px;
+    display: block;
+}
+
+.video-card h3 {
+    margin-top: 12px;
+    color: #8e2de2;
+    font-size: 18px;
+}
+
+/* ================= VIDEO GALLERY ================= */
+
+.video-section {
+    padding: 50px 6%;
+    background: linear-gradient(135deg, #fff8fc, #f8f0ff);
+    text-align: center;
+}
+
+.video-section h2 {
+    color: #d4145a;
+    font-size: 28px;
+    margin-bottom: 30px;
+}
+
+.video-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.video-card {
+    background: white;
+    padding: 12px;
+    border-radius: 18px;
+    box-shadow: 0 8px 25px rgba(120, 30, 90, 0.12);
+    transition: 0.3s;
+    overflow: hidden;
+}
+
+.video-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 30px rgba(120, 30, 90, 0.18);
+}
+
+.video-card video {
+    width: 100%;
+    display: block;
+    border-radius: 12px;
+    background: #000;
+}
+
+.video-card h3 {
+    margin: 12px 5px 5px;
+    color: #8e2de2;
+    font-size: 17px;
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+
+    .video-section {
+        padding: 35px 15px;
+    }
+
+    .video-section h2 {
+        font-size: 23px;
+    }
+
+    .video-gallery {
+        grid-template-columns: 1fr;
+    }
+}
+
+    </style>
+</head>
+
+<!-- ================= VIDEO GALLERY ================= -->
+
+<section class="video-section">
+
+    <h2>🎬 আমাদের ভিডিও বিজ্ঞাপন</h2>
+
+    <div class="video-gallery" id="videoGallery">
+
+        <p>⏳ ভিডিও লোড হচ্ছে...</p>
+
+    </div>
+
+</section>
+
+<script>
+async function loadVideos() {
+
+    const gallery = document.getElementById("videoGallery");
+
+    try {
+
+        const response = await fetch("/api/videos");
+        const data = await response.json();
+
+        if (!data.success || data.videos.length === 0) {
+
+            gallery.innerHTML =
+                "<p>📭 এখনো কোনো ভিডিও আপলোড করা হয়নি।</p>";
+
+            return;
+        }
+
+        gallery.innerHTML = "";
+
+        data.videos.forEach(function(video) {
+             const card = document.createElement("div");
+
+             card.className = "video-card";
+
+             const productName = video.productName || "SR Sajghor Fashion & Beauty";
+
+const productPrice = video.productPrice
+    ? "৳ " + video.productPrice
+    : "দাম জানতে যোগাযোগ করুন";
+
+card.innerHTML = `
+    <video controls preload="metadata">
+        <source src="${video.url}" type="video/mp4">
+        আপনার ব্রাউজার ভিডিও চালাতে পারছে না।
+    </video>
+
+    <h3>🎬 ${productName}</h3>
+
+    <p style="
+        margin:8px 0;
+        color:#555;
+        font-size:14px;
+    ">
+        ✨ নতুন কালেকশন — আজকের বিশেষ অফার
+    </p>
+
+    <p style="
+        font-size:20px;
+        font-weight:bold;
+        color:#d4145a;
+        margin:10px 0;
+    ">
+        ${productPrice}
+    </p>
+
+    <button
+        onclick="orderProduct('${productName}', ${Number(video.productPrice) || 0})"
+        style="
+            width:100%;
+            padding:12px;
+            border:none;
+            border-radius:10px;
+            background:linear-gradient(135deg,#d4145a,#8e2de2);
+            color:white;
+            font-weight:bold;
+            cursor:pointer;
+        "
+    >
+        🛒 এখনই অর্ডার করুন
+    </button>
+`;
+
+            gallery.appendChild(card);
+        });
+
+    } catch (error) {
+
+        console.error("Video loading error:", error);
+
+        gallery.innerHTML =
+            "<p>❌ ভিডিও লোড করা যাচ্ছে না।</p>";
+    }
+}
+
+loadVideos();
+</script>
+
+
+<!-- ================= HEADER ================= -->
+
+<header>
+
+    <div class="logo">
+        🌸 SR সাজঘর
+    </div>
+
+    <nav>
+        <a href="#">হোম</a>
+        <a href="#products">প্রোডাক্ট</a>
+        <a href="#categories">ক্যাটাগরি</a>
+        <a href="#contact">যোগাযোগ</a>
+    </nav>
+
+<div class="cart" onclick="showCart()">
+    🛒
+    <span id="cartCount">0</span>
+</div>
+
+<div class="wishlist" onclick="showWishlist()">
+    ❤️
+    <span id="wishlistCount">0</span>
+</div>
+
+</header>
+
+
+<!-- ================= HERO ================= -->
+
+<section class="hero">
+
+    <div class="hero-content">
+
+        <div class="welcome">
+            ✨ Welcome to SR Sajghor
+        </div>
+
+        <h1>
+            SR সাজঘর
+            <span>Fashion & Beauty</span>
+        </h1>
+
+        <p>
+            আপনার সৌন্দর্য, স্টাইল ও ফ্যাশনের
+            বিশ্বস্ত অনলাইন ঠিকানা। 🌸
+        </p>
+
+        <a href="#products" class="shop-btn">
+            🛍️ এখনই শপিং করুন
+        </a>
+
+    </div>
+
+</section>
+
+
+<!-- ================= CATEGORY ================= -->
+
+<section class="section" id="categories">
+
+    <h2 class="section-title">
+        আমাদের ক্যাটাগরি
+    </h2>
+
+    <p class="section-subtitle">
+        আপনার পছন্দের পণ্য খুঁজে নিন
+    </p>
+
+    <div class="categories">
+
+        <div class="category">
+            <div class="icon">👗</div>
+
+            <h3>থ্রি-পিস</h3>
+
+            <p>
+                আকর্ষণীয় ডিজাইন ও
+                নতুন কালেকশনের থ্রি-পিস।
+            </p>
+        </div>
+
+
+        <div class="category">
+            <div class="icon">💄</div>
+
+            <h3>বিউটি</h3>
+
+            <p>
+                দৈনন্দিন সৌন্দর্যচর্চার
+                বিভিন্ন বিউটি প্রোডাক্ট।
+            </p>
+        </div>
+
+
+        <div class="category">
+            <div class="icon">👜</div>
+
+            <h3>ফ্যাশন</h3>
+
+            <p>
+                ফ্যাশন ও লাইফস্টাইলের
+                আকর্ষণীয় পণ্য।
+            </p>
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= PRODUCTS ================= -->
+
+<section class="section" id="products">
+
+    <h2 class="section-title">
+        জনপ্রিয় প্রোডাক্ট
+    </h2>
+
+    <p class="section-subtitle">
+        আমাদের নতুন ও জনপ্রিয় কালেকশন
+    </p>
+
+    <!-- ================= SEARCH + FILTER ================= -->
+
+<div class="product-tools">
+
+    <input
+        type="text"
+        id="productSearch"
+        placeholder="🔎 Product খুঁজুন..."
+        oninput="filterProducts()"
+    >
+
+    <select
+        id="categoryFilter"
+        onchange="filterProducts()">
+
+        <option value="all">সব Category</option>
+        <option value="Three Piece">থ্রি-পিস</option>
+        <option value="Beauty">বিউটি</option>
+        <option value="Fashion">ফ্যাশন</option>
+        <option value="Jewelry">জুয়েলারি</option>
+
+    </select>
+
+</div>
+
+    <div id="productList" class="products">
+
+        <div class="loading">
+            ⏳ প্রোডাক্ট লোড হচ্ছে...
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= FOOTER ================= -->
+
+<footer id="contact">
+
+    <h2>
+        🌸 SR Sajghor Fashion & Beauty
+    </h2>
+
+    <p>
+        আপনার পছন্দ, আমাদের দায়িত্ব ❤️
+    </p>
+
+    <p class="footer-phone">
+        📞 01619871953 | 01403608152
+    </p>
+
+    <p>
+        © 2026 SR Sajghor Fashion & Beauty
+    </p>
+
+    <a href="https://www.facebook.com/srsajghorfashionbeauty"
+   target="_blank"
+   rel="noopener noreferrer"
+   style="display:inline-block;margin-top:18px;padding:12px 22px;border-radius:25px;background:linear-gradient(135deg,#1877f2,#4267B2);color:white;text-decoration:none;font-weight:bold;">
+    📘 আমাদের Facebook Page
+</a>
+
+</footer>
+
+
+<script>
+
+/* ================= LOAD PRODUCTS ================= */
+
+async function loadProducts() {
+
+    const productList =
+        document.getElementById("productList");
+
+    try {
+
+        const response =
+            await fetch("/api/products");
+
+        const data =
+            await response.json();
+
+        if (!data.success) {
+
+            throw new Error(
+                "Product পাওয়া যায়নি"
+            );
+        }
+
+        const products =
+            data.products;
+
+        if (!products || products.length === 0) {
+
+            productList.innerHTML = `
+                <div class="loading">
+                    😔 এখনো কোনো প্রোডাক্ট যোগ করা হয়নি।
+                </div>
+            `;
+
+            return;
+        }
+
+        productList.innerHTML = "";
+
+
+        // ================= CUSTOMER ORDER CHECK =================
+
+let customerOrder = null;
+
+const customerOrderId =
+    localStorage.getItem("customerOrderId");
+
+if (customerOrderId) {
+
+    try {
+
+        const orderResponse =
+            await fetch(
+                "/api/customer-order/" +
+                encodeURIComponent(customerOrderId)
+            );
+
+        const orderData =
+            await orderResponse.json();
+
+        if (orderData.success) {
+            customerOrder = orderData.order;
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Customer Order Check Error:",
+            error
+        );
+
+    }
+}
+
+        products.forEach(product => {
+
+            let imageHTML = "";
+
+            if (
+                product.image &&
+                product.image.trim() !== ""
+            ) {
+
+                imageHTML = `
+                    <img
+                        src="${product.image}"
+                        alt="${product.name}"
+                        onerror="
+                        this.style.display='none';
+                        this.parentElement.innerHTML='<div class=no-image>🛍️</div>';
+                        "
+                    >
+                `;
+
+            } else {
+
+                let icon = "🛍️";
+
+                if (product.category === "Three Piece") {
+
+                    icon = "👗";
+
+                } else if (
+                    product.category === "Beauty"
+                ) {
+
+                    icon = "💄";
+
+                } else if (
+                    product.category === "Fashion"
+                ) {
+
+                    icon = "👜";
+
+                } else if (
+                    product.category === "Jewelry"
+                ) {
+
+                    icon = "💍";
+                }
+
+                imageHTML = `
+                    <div class="no-image">
+                        ${icon}
+                    </div>
+                `;
+            }
+
+
+            const productCard =
+                document.createElement("div");
+
+            productCard.className =
+                "product";
+
+
+            productCard.innerHTML = `
+
+                <div class="product-image">
+
+                    ${imageHTML}
+
+                </div>
+
+                    ${
+        customerOrder &&
+        customerOrder.status === "confirmed" &&
+        Array.isArray(customerOrder.products) &&
+        customerOrder.products.some(
+            item =>
+                Number(item.id ?? item.productId) ===
+                Number(product.id)
+        )
+        ? `
+            <div class="product-confirm-notification">
+                🔔 আপনার এই Product-এর অর্ডার Confirm হয়েছে! 🎉
+            </div>
+          `
+        : ""
+    }
+
+                <div class="product-info">
+
+                <button
+                     class="wishlist-btn"
+                    data-product-id="${product.id}"
+                    onclick='toggleWishlist(${JSON.stringify(product)})'>
+                    ❤️
+                </button>
+
+                    <h3>
+                        ${product.name}
+                    </h3>
+
+
+                    <div class="category-name">
+                        📂 ${product.category}
+                    </div>
+
+
+                    <p class="price">
+                        ৳ ${product.price}
+                    </p>
+
+
+                    <p class="description">
+                        ${product.description || ""}
+                    </p>
+
+
+<div style="display:flex; gap:8px; margin-top:15px;">
+
+    <button
+        class="order-btn"
+        style="margin-top:0;"
+        onclick='showProductDetails(${JSON.stringify(product)})'>
+        👁️ বিস্তারিত
+    </button>
+
+    <button
+        class="order-btn"
+        style="margin-top:0;"
+        onclick='orderProduct(${JSON.stringify(product)})'>
+        🛒 কার্টে
+    </button>
+
+</div>
+
+                </div>
+            `;
+
+
+            productList.appendChild(
+                productCard
+            );
+
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        productList.innerHTML = `
+
+            <div class="loading">
+
+                ❌ প্রোডাক্ট লোড করা যাচ্ছে না।
+
+                <br><br>
+
+                Server চালু আছে কিনা দেখুন।
+
+            </div>
+
+        `;
+    }
+}
+
+
+/* ================= ORDER ================= */
+
+let cart = [];
+
+function updateCartCount() {
+
+    const cartCount =
+        document.getElementById("cartCount");
+
+    const count = cart.reduce(
+        (total, item) => total + Number(item.quantity),
+        0
+    );
+
+    cartCount.innerText = count;
+} 
+
+function orderProduct(product) {
+
+    const stock = Number(product.stock);
+
+    if (stock <= 0) {
+        alert("❌ এই Product বর্তমানে Stock Out!");
+        return;
+    }
+
+    const existing = cart.find(item => item.id === product.id);
+
+    if (existing) {
+
+        if (existing.quantity >= stock) {
+            alert("❌ যতগুলো Stock আছে তার বেশি নেওয়া যাবে না!");
+            return;
+        }
+
+        existing.quantity += 1;
+
+    } else {
+
+        cart.push({
+            id: product.id,
+            name: product.name,
+            price: Number(product.price),
+            stock: stock,
+            quantity: 1,
+            image: product.image || ""
+        });
+
+    }
+
+    updateCartCount();
+
+    alert("🛒 " + product.name + " কার্টে যোগ হয়েছে!");
+
+}
+
+
+function showCart() {
+
+    const cartPanel =
+        document.getElementById("cartPanel");
+
+    cartPanel.classList.add("active");
+
+    renderCart();
+}
+
+
+function closeCart() {
+
+    const cartPanel =
+        document.getElementById("cartPanel");
+
+    cartPanel.classList.remove("active");
+
+}
+
+
+function renderCart() {
+
+    const cartItems = document.getElementById("cartItems");
+    const cartTotal = document.getElementById("cartTotal");
+
+    if (cart.length === 0) {
+
+        cartItems.innerHTML = `
+            <div style="
+                text-align:center;
+                padding:50px 10px;
+                color:#777;
+            ">
+                🛒<br><br>
+                আপনার কার্ট এখনো খালি।
+            </div>
+        `;
+
+        cartTotal.innerText = "0";
+        return;
+    }
+
+    cartItems.innerHTML = "";
+
+    let total = 0;
+
+    cart.forEach((item, index) => {
+
+        const quantity = Number(item.quantity);
+        const price = Number(item.price);
+
+        total += price * quantity;
+
+        const div = document.createElement("div");
+
+        div.className = "cart-item";
+
+        div.innerHTML = `
+
+            <div class="cart-item-info">
+
+                <h4>
+                    ${item.name}
+                </h4>
+
+                <p>
+                    ৳ ${price} × ${quantity}
+                </p>
+
+                <div style="
+                    display:flex;
+                    align-items:center;
+                    gap:10px;
+                    margin-top:10px;
+                ">
+
+                    <button
+                        onclick="changeQuantity(${index}, -1)"
+                        style="
+                            padding:5px 12px;
+                            border:none;
+                            border-radius:6px;
+                            cursor:pointer;
+                        "
+                    >
+                        ➖
+                    </button>
+
+                    <strong>
+                        ${quantity}
+                    </strong>
+
+                    <button
+                        onclick="changeQuantity(${index}, 1)"
+                        style="
+                            padding:5px 12px;
+                            border:none;
+                            border-radius:6px;
+                            cursor:pointer;
+                        "
+                    >
+                        ➕
+                    </button>
+
+                </div>
+
+                <p style="margin-top:8px;">
+                    মোট: ৳ ${price * quantity}
+                </p>
+
+            </div>
+
+            <button
+                class="remove-btn"
+                onclick="removeFromCart(${index})"
+            >
+                🗑️
+            </button>
+
+        `;
+
+        cartItems.appendChild(div);
+
+    });
+
+    cartTotal.innerText = total;
+
+}
+function changeQuantity(index, change) {
+
+    const item = cart[index];
+
+    if (!item) return;
+
+    const newQuantity = item.quantity + change;
+
+    if (newQuantity <= 0) {
+
+        cart.splice(index, 1);
+
+    } else if (newQuantity > item.stock) {
+
+        alert("❌ Stock-এর বেশি Product নেওয়া যাবে না!");
+
+        return;
+
+    } else {
+
+        item.quantity = newQuantity;
+
+    }
+
+    updateCartCount();
+
+    renderCart();
+
+}
+
+function removeFromCart(index) {
+
+    cart.splice(index, 1);
+
+    document.getElementById("cartCount").innerText =
+        cart.length;
+
+    renderCart();
+
+}
+function checkout() {
+
+    if (cart.length === 0) {
+        alert("🛒 আগে কার্টে পণ্য যোগ করুন.");
+        return;
+    }
+
+    const orderFormPanel =
+        document.getElementById("orderFormPanel");
+
+    orderFormPanel.classList.add("active");
+
+    // সব পণ্যের নাম + quantity
+    const productNames = cart
+        .map(item => item.name + " × " + item.quantity)
+        .join(", ");
+
+    // Quantity অনুযায়ী মোট দাম
+    const total = cart.reduce(
+        (sum, item) =>
+            sum + (Number(item.price) * Number(item.quantity)),
+        0
+    );
+
+    document.getElementById("orderProductName").innerText =
+        productNames;
+
+    document.getElementById("orderTotal").innerText =
+        total;
+}
+
+function closeOrderForm() {
+
+    document
+        .getElementById("orderFormPanel")
+        .classList.remove("active");
+
+}
+
+// ================= ORDER SUBMIT =================
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const orderForm =
+        document.getElementById("orderForm");
+
+    if (!orderForm) return;
+
+
+    orderForm.addEventListener("submit", async function (event) {
+
+        event.preventDefault();
+
+
+        // Customer information
+
+        const name =
+            document.getElementById("customerName").value.trim();
+
+        const phone =
+            document.getElementById("customerPhone").value.trim();
+
+        const address =
+            document.getElementById("customerAddress").value.trim();
+
+        const note =
+            document.getElementById("customerNote").value.trim();
+
+
+        // Cart check
+
+        if (cart.length === 0) {
+
+            alert("🛒 আগে কার্টে পণ্য যোগ করুন।");
+
+            return;
+        }
+
+
+        // Total price
+
+       const total =
+    cart.reduce(
+        (sum, item) =>
+            sum + (Number(item.price) * Number(item.quantity)),
+        0
+    );
+
+
+        // Send order to server
+
+        try {
+
+            const response =
+                await fetch("/api/orders", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        name: name,
+
+                        phone: phone,
+
+                        address: address,
+
+                        note: note,
+
+                        products: cart,
+
+                        total: total
+
+                    })
+
+                });
+
+
+            const data =
+                await response.json();
+
+
+            if (!data.success) {
+
+                alert(
+                    "❌ অর্ডার করা যায়নি: " +
+                    data.message
+                );
+
+                return;
+            }
+
+
+            // Success
+
+            alert(
+                "✅ অর্ডার সফলভাবে গ্রহণ করা হয়েছে!\n\n" +
+                "Order ID: " +
+                data.order.orderId
+            );
+
+            // Customer Order ID Save
+            localStorage.setItem(
+             "customerOrderId",
+              data.order.orderId
+             );
+
+            // Cart empty
+
+            cart = [];
+
+
+        updateCartCount();
+
+
+            // Close order form
+
+            closeOrderForm();
+
+
+            // Close cart if open
+
+            const cartPanel =
+                document.getElementById("cartPanel");
+
+            if (cartPanel) {
+
+                cartPanel.classList.remove("active");
+
+            }
+
+
+            // Reset form
+
+            orderForm.reset();
+
+
+            renderCart();
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।"
+            );
+
+        }
+
+    });
+
+});
+
+// ================= PRODUCT DETAILS =================
+
+function showProductDetails(product) {
+
+    currentProductForReview = product;
+
+    const modal = document.getElementById("productModal");
+    const imageBox = document.getElementById("productModalImage");
+
+    document.getElementById("productModalName").innerText =
+        product.name || "";
+
+    document.getElementById("productModalCategory").innerText =
+        "📂 " + (product.category || "");
+
+    document.getElementById("productModalPrice").innerText =
+        "৳ " + Number(product.price || 0);
+
+
+    document.getElementById("productModalDescription").innerText =
+        product.description || "কোনো Description নেই।";
+
+
+    // Product Image
+    if (product.image && product.image.trim() !== "") {
+
+        imageBox.innerHTML =
+            `<img src="${product.image}" alt="">`;
+
+    } else {
+
+        let icon = "🛍️";
+
+        if (product.category === "Three Piece") {
+            icon = "👗";
+        }
+        else if (product.category === "Beauty") {
+            icon = "💄";
+        }
+        else if (product.category === "Fashion") {
+            icon = "👜";
+        }
+        else if (product.category === "Jewelry") {
+            icon = "💍";
+        }
+
+        imageBox.innerHTML =
+            `<div class="no-image">${icon}</div>`;
+    }
+
+
+    // Cart Button
+    const btn =
+        document.getElementById("productModalCartBtn");
+
+    btn.onclick = function () {
+
+        orderProduct(product);
+
+        if (Number(product.stock) > 0) {
+            closeProductDetails();
+        }
+    };
+
+
+    // Popup Open
+
+    loadProductReviews(product.id);
+
+    modal.classList.add("active");
+}
+
+
+// Popup Close
+function closeProductDetails() {
+
+    document
+        .getElementById("productModal")
+        .classList.remove("active");
+}
+
+// ================= LOAD PRODUCT REVIEWS =================
+
+async function loadProductReviews(productId) {
+
+    const container =
+        document.getElementById("savedReviews");
+
+    if (!container) {
+        console.error("savedReviews element পাওয়া যায়নি!");
+        return;
+    }
+
+    container.innerHTML =
+        `<p class="no-reviews">⏳ Review লোড হচ্ছে...</p>`;
+
+    try {
+
+        const response =
+            await fetch("/api/reviews/" + productId);
+
+        const data =
+            await response.json();
+
+        if (!data.success || !data.reviews || data.reviews.length === 0) {
+
+            container.innerHTML =
+                `<p class="no-reviews">
+                    ⭐ এখনো কোনো Review নেই।
+                </p>`;
+
+            return;
+        }
+
+        container.innerHTML = "";
+
+        data.reviews.slice().reverse().forEach(item => {
+
+            const reviewDiv =
+                document.createElement("div");
+
+            reviewDiv.className = "saved-review";
+
+            const rating =
+                Number(item.rating);
+
+            const stars =
+                "★".repeat(rating) +
+                "☆".repeat(5 - rating);
+
+            const starsDiv =
+                document.createElement("div");
+
+            starsDiv.className =
+                "saved-review-stars";
+
+            starsDiv.innerText = stars;
+
+            const textDiv =
+                document.createElement("div");
+
+            textDiv.className =
+                "saved-review-text";
+
+            textDiv.innerText =
+                item.review || "";
+
+            const dateDiv =
+                document.createElement("div");
+
+            dateDiv.className =
+                "saved-review-date";
+
+            dateDiv.innerText =
+                new Date(item.createdAt)
+                    .toLocaleDateString("bn-BD");
+
+            reviewDiv.appendChild(starsDiv);
+            reviewDiv.appendChild(textDiv);
+            reviewDiv.appendChild(dateDiv);
+
+            container.appendChild(reviewDiv);
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Review Load Error:",
+            error
+        );
+
+        container.innerHTML =
+            `<p class="no-reviews">
+                ❌ Review লোড করা যায়নি।
+            </p>`;
+    }
+}
+
+// ================= SEARCH + FILTER =================
+
+function filterProducts() {
+
+    const searchText =
+        document.getElementById("productSearch").value
+        .toLowerCase()
+        .trim();
+
+    const selectedCategory =
+        document.getElementById("categoryFilter").value;
+
+    const products =
+        document.querySelectorAll(".product");
+
+    products.forEach(product => {
+
+        const productName =
+            product.querySelector("h3")?.innerText
+            .toLowerCase() || "";
+
+        const productCategory =
+            product.querySelector(".category-name")?.innerText
+            .toLowerCase() || "";
+
+        const searchMatch =
+            productName.includes(searchText) ||
+            productCategory.includes(searchText);
+
+        const categoryMatch =
+            selectedCategory === "all" ||
+            productCategory.includes(
+                selectedCategory.toLowerCase()
+            );
+
+        if (searchMatch && categoryMatch) {
+            product.style.display = "";
+        } else {
+            product.style.display = "none";
+        }
+
+    });
+}
+
+function filterProducts() {
+
+    const searchText =
+        document.getElementById("productSearch").value
+        .toLowerCase()
+        .trim();
+
+    const selectedCategory =
+        document.getElementById("categoryFilter").value;
+
+    const products =
+        document.querySelectorAll(".product");
+
+    products.forEach(product => {
+
+        const productName =
+            product.querySelector("h3")?.innerText
+            .toLowerCase() || "";
+
+        const productCategory =
+            product.querySelector(".category-name")?.innerText
+            .toLowerCase() || "";
+
+        const searchMatch =
+            productName.includes(searchText) ||
+            productCategory.includes(searchText);
+
+        const categoryMatch =
+            selectedCategory === "all" ||
+            productCategory.includes(
+                selectedCategory.toLowerCase()
+            );
+
+        if (searchMatch && categoryMatch) {
+            product.style.display = "";
+        } else {
+            product.style.display = "none";
+        }
+
+    });
+}
+
+// ================= WISHLIST =================
+
+let wishlist = JSON.parse(
+    localStorage.getItem("wishlist")
+) || [];
+
+function toggleWishlist(product) {
+
+    const existingIndex = wishlist.findIndex(
+        item => item.id === product.id
+    );
+
+    if (existingIndex !== -1) {
+
+        wishlist.splice(existingIndex, 1);
+
+        alert("💔 Wishlist থেকে বাদ দেওয়া হয়েছে!");
+
+    } else {
+
+        wishlist.push({
+            id: product.id,
+            name: product.name,
+            price: Number(product.price),
+            image: product.image || "",
+            category: product.category || ""
+        });
+
+        alert("❤️ Wishlist-এ যোগ হয়েছে!");
+    }
+
+    localStorage.setItem(
+        "wishlist",
+        JSON.stringify(wishlist)
+    );
+
+    updateWishlistButtons();
+    updateWishlistCount();
+}
+
+function updateWishlistCount() {
+
+    const count = document.getElementById("wishlistCount");
+
+    if (count) {
+        count.innerText = wishlist.length;
+    }
+}
+
+
+function updateWishlistButtons() {
+
+    document.querySelectorAll(".wishlist-btn")
+        .forEach(button => {
+
+            const productId =
+                button.dataset.productId;
+
+            const exists = wishlist.some(
+                item => String(item.id) === String(productId)
+            );
+
+            button.innerText =
+                exists ? "💖" : "❤️";
+        });
+}
+
+// ================= WISHLIST PANEL =================
+
+function showWishlist() {
+
+    const panel =
+        document.getElementById("wishlistPanel");
+
+    panel.classList.add("active");
+
+    renderWishlist();
+}
+
+
+function closeWishlist() {
+
+    document
+        .getElementById("wishlistPanel")
+        .classList.remove("active");
+}
+
+
+function renderWishlist() {
+
+    const container =
+        document.getElementById("wishlistItems");
+
+    if (wishlist.length === 0) {
+
+        container.innerHTML = `
+            <p class="empty-wishlist">
+                ❤️ Wishlist এখনো খালি।
+            </p>
+        `;
+
+        return;
+    }
+
+    container.innerHTML = "";
+
+    wishlist.forEach(product => {
+
+        const item =
+            document.createElement("div");
+
+        item.className = "wishlist-item";
+
+        let imageHTML = "🛍️";
+
+        if (product.image) {
+
+            imageHTML = `
+                <img
+                    src="${product.image}"
+                    alt="${product.name}">
+            `;
+
+        } else {
+
+            if (product.category === "Three Piece") {
+                imageHTML = "👗";
+            }
+            else if (product.category === "Beauty") {
+                imageHTML = "💄";
+            }
+            else if (product.category === "Fashion") {
+                imageHTML = "👜";
+            }
+            else if (product.category === "Jewelry") {
+                imageHTML = "💍";
+            }
+        }
+
+        item.innerHTML = `
+
+            <div class="wishlist-item-image">
+                ${imageHTML}
+            </div>
+
+            <div class="wishlist-item-info">
+
+                <h4>${product.name}</h4>
+
+                <div class="wishlist-item-price">
+                    ৳ ${Number(product.price)}
+                </div>
+
+            </div>
+
+            <button
+                class="wishlist-remove"
+                onclick="removeFromWishlist(${product.id})">
+                🗑️
+            </button>
+
+        `;
+
+        container.appendChild(item);
+    });
+}
+
+
+function removeFromWishlist(productId) {
+
+    wishlist = wishlist.filter(
+        item => String(item.id) !== String(productId)
+    );
+
+    localStorage.setItem(
+        "wishlist",
+        JSON.stringify(wishlist)
+    );
+
+    updateWishlistCount();
+    updateWishlistButtons();
+    renderWishlist();
+}
+
+// ================= PRODUCT REVIEW JS =================
+
+let selectedRating = 0;
+
+let currentProductForReview = null;
+
+function selectRating(rating) {
+
+    selectedRating = rating;
+
+    const stars =
+        document.querySelectorAll(".review-stars button");
+
+    stars.forEach((star, index) => {
+
+        if (index < rating) {
+            star.classList.add("selected");
+        } else {
+            star.classList.remove("selected");
+        }
+
+    });
+}
+
+
+async function submitReview() {
+
+    if (selectedRating === 0) {
+        alert("⭐ আগে একটি Rating দিন!");
+        return;
+    }
+
+    const reviewText =
+        document.getElementById("reviewText").value.trim();
+
+    if (reviewText === "") {
+        alert("📝 আপনার Review লিখুন!");
+        return;
+    }
+
+    if (!currentProductForReview) {
+        alert("❌ Product পাওয়া যায়নি!");
+        return;
+    }
+
+    try {
+
+        const response = await fetch("/api/reviews", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+
+                productId: currentProductForReview.id,
+
+                productName: currentProductForReview.name,
+
+                rating: selectedRating,
+
+                review: reviewText
+
+            })
+
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+
+            alert("✅ আপনার Review সফলভাবে Save হয়েছে!");
+
+            selectedRating = 0;
+
+            document
+                .querySelectorAll(".review-stars button")
+                .forEach(star => {
+                    star.classList.remove("selected");
+                });
+
+            document.getElementById("reviewText").value = "";
+
+        } else {
+
+            alert(
+                "❌ Review Save হয়নি!\n" +
+                (data.message || "")
+            );
+        }
+
+    } catch (error) {
+
+        console.error("Review Error:", error);
+
+        alert(
+            "❌ Server-এর সাথে যোগাযোগ করা যায়নি।"
+        );
+    }
+}
+
+updateWishlistCount();
+
+loadProducts();
+
+</script>
+
+<!-- ================= ORDER FORM ================= -->
+
+<div id="orderFormPanel" class="order-form-panel">
+
+    <div class="order-form-header">
+        <h2>📦 অর্ডার সম্পন্ন করুন</h2>
+
+        <button onclick="closeOrderForm()">✕</button>
+    </div>
+
+    <form id="orderForm">
+
+        <div class="form-group">
+            <label>👤 আপনার নাম</label>
+
+            <input
+                type="text"
+                id="customerName"
+                placeholder="আপনার নাম লিখুন"
+                required
+            >
+        </div>
+
+
+        <div class="form-group">
+            <label>📱 মোবাইল নম্বর</label>
+
+            <input
+                type="tel"
+                id="customerPhone"
+                placeholder="01XXXXXXXXX"
+                required
+            >
+        </div>
+
+
+        <div class="form-group">
+            <label>🏠 সম্পূর্ণ ঠিকানা</label>
+
+            <textarea
+                id="customerAddress"
+                placeholder="বাড়ি, গ্রাম, থানা, জেলা লিখুন"
+                required
+            ></textarea>
+        </div>
+
+
+        <div class="form-group">
+            <label>📝 অতিরিক্ত নোট</label>
+
+            <textarea
+                id="customerNote"
+                placeholder="কোনো বিশেষ নির্দেশনা থাকলে লিখুন"
+            ></textarea>
+        </div>
+
+
+        <div class="order-summary">
+
+            <h3>🛒 অর্ডারের তথ্য</h3>
+
+            <p>
+                পণ্য:
+                <strong id="orderProductName">
+                    -
+                </strong>
+            </p>
+
+            <p>
+                মোট:
+                <strong>
+                    ৳ <span id="orderTotal">0</span>
+                </strong>
+            </p>
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="confirm-order-btn">
+
+            ✅ অর্ডার কনফার্ম করুন
+
+        </button>
+
+    </form>
+
+</div>
+
+<!-- ================= CART PANEL ================= -->
+
+<div id="cartPanel" class="cart-panel">
+
+    <div class="cart-header">
+        <h2>🛒 আপনার কার্ট</h2>
+
+        <button onclick="closeCart()">✕</button>
+    </div>
+
+    <div id="cartItems" class="cart-items">
+    </div>
+
+    <div class="cart-footer">
+
+        <div class="cart-total">
+            মোট:
+            <strong>
+                ৳ <span id="cartTotal">0</span>
+            </strong>
+        </div>
+
+        <button
+            class="checkout-btn"
+            onclick="checkout()">
+
+            📦 অর্ডার করুন
+
+        </button>
+
+    </div>
+
+</div>
+
+<!-- ================= PRODUCT DETAILS POPUP ================= -->
+
+<div id="productModal"
+     class="product-modal"
+     onclick="closeProductDetails()">
+
+    <div class="product-modal-content"
+         onclick="event.stopPropagation()">
+
+        <button
+            class="product-modal-close"
+            onclick="closeProductDetails()">
+            ✕
+        </button>
+
+        <div id="productModalImage"
+             class="product-modal-image">
+        </div>
+
+        <h2 id="productModalName">-</h2>
+
+        <div id="productModalCategory"
+             class="category-name">
+            -
+        </div>
+
+        <div id="productModalPrice"
+             class="product-modal-price">
+            ৳ 0
+        </div>
+
+        <div id="productModalDescription"
+             class="product-modal-description">
+            -
+        </div>
+
+        <button
+            id="productModalCartBtn"
+            class="product-modal-cart-btn">
+            🛒 কার্টে যোগ করুন
+        </button>
+
+        <!-- ================= PRODUCT REVIEW ================= -->
+
+<div class="product-review-box">
+
+    <h3>⭐ Product Review</h3>
+
+    <div id="savedReviews" class="saved-reviews">
+
+    <p class="no-reviews">
+        ⭐ এখনো কোনো Review নেই।
+    </p>
+
+</div>
+
+    <div class="review-stars">
+        <button onclick="selectRating(1)">★</button>
+        <button onclick="selectRating(2)">★</button>
+        <button onclick="selectRating(3)">★</button>
+        <button onclick="selectRating(4)">★</button>
+        <button onclick="selectRating(5)">★</button>
+    </div>
+
+    <textarea
+        id="reviewText"
+        placeholder="আপনার মতামত লিখুন..."></textarea>
+
+    <button
+        class="review-submit-btn"
+        onclick="submitReview()">
+        ⭐ Review দিন
+    </button>
+
+</div>
+
+
+<!-- ================= WISHLIST PANEL ================= -->
+
+<div id="wishlistPanel" class="wishlist-panel">
+
+    <div class="wishlist-header">
+        <h2>❤️ আমার Wishlist</h2>
+
+        <button onclick="closeWishlist()">
+            ✕
+        </button>
+    </div>
+
+    <div id="wishlistItems" class="wishlist-items">
+        <p class="empty-wishlist">
+            ❤️ Wishlist এখনো খালি।
+        </p>
+    </div>
+
+</div>
+
+<!-- Customer Notification -->
+
+<div id="customerNotification"
+     style="
+        display:none;
+        position:fixed;
+        top:80px;
+        right:20px;
+        z-index:9999;
+        background:white;
+        padding:16px 20px;
+        border-radius:12px;
+        box-shadow:0 5px 25px rgba(0,0,0,0.2);
+        max-width:350px;
+     ">
+
+    <div id="notificationMessage"></div>
+
+    <button
+        onclick="closeCustomerNotification()"
+        style="
+            margin-top:10px;
+            padding:7px 14px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+        ">
+        বন্ধ করুন
+    </button>
+
+</div>
+
+<script>
+
+// ================= CUSTOMER NOTIFICATION =================
+
+async function checkCustomerNotification() {
+
+    const orderId =
+        localStorage.getItem("customerOrderId");
+
+    if (!orderId) {
+        return;
+    }
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/customer-order/" +
+                encodeURIComponent(orderId)
+            );
+
+        const data =
+            await response.json();
+
+        if (!data.success) {
+            return;
+        }
+
+        const notification =
+            data.order.notification;
+
+        // Notification থাকলে দেখাবে
+        if (notification) {
+
+            const notificationBox =
+                document.getElementById(
+                    "customerNotification"
+                );
+
+            const messageBox =
+                document.getElementById(
+                    "notificationMessage"
+                );
+
+            if (notificationBox && messageBox) {
+
+                messageBox.textContent =
+                    notification.message;
+
+                notificationBox.style.display =
+                    "block";
+            }
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Customer Notification Error:",
+            error
+        );
+
+    }
+}
+
+
+// ================= CLOSE NOTIFICATION =================
+
+function closeCustomerNotification() {
+
+    const notificationBox =
+        document.getElementById(
+            "customerNotification"
+        );
+
+    if (notificationBox) {
+
+        notificationBox.style.display =
+            "none";
+    }
+
+}
+
+
+// ================= CHECK EVERY 5 SECONDS =================
+
+setInterval(
+    checkCustomerNotification,
+    5000
+);
+
+
+// ================= CHECK WHEN WEBSITE OPENS =================
+
+checkCustomerNotification();
+
+</script>
+
+
+</body>
+</html>
+```
