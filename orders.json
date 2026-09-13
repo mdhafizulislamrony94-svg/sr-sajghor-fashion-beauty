@@ -1,0 +1,132 @@
+[
+  {
+    "orderId": "SZ1789160530365",
+    "name": "Arifa",
+    "phone": "01403608151",
+    "address": ";sdfkdsl;f",
+    "note": "dsfFdf",
+    "products": [
+      {
+        "id": 1789152558139,
+        "name": "Lipsticks ",
+        "price": 500,
+        "stock": 24,
+        "quantity": 4,
+        "image": "/uploads/1789152701848.jpg"
+      }
+    ],
+    "total": 2000,
+    "status": "delivered",
+    "createdAt": "2026-09-11T21:02:10.365Z"
+  },
+  {
+    "orderId": "SZ1789242035047",
+    "name": "Rony",
+    "phone": "01403608156",
+    "address": "nalta",
+    "note": "sdgadedf",
+    "products": [
+      {
+        "id": 1789241937355,
+        "name": "good",
+        "price": 1254,
+        "stock": 30,
+        "quantity": 6,
+        "image": "/uploads/1789241937350.jpeg"
+      }
+    ],
+    "total": 7524,
+    "status": "confirmed",
+    "createdAt": "2026-09-12T19:40:35.047Z",
+    "notification": {
+      "message": "🎉 আপনার অর্ডারটি Confirm করা হয়েছে। SR Sajghor Fashion & Beauty-এর পক্ষ থেকে ধন্যবাদ ❤️",
+      "read": false,
+      "createdAt": "2026-09-12T19:40:53.679Z"
+    }
+  },
+  {
+    "orderId": "SZ1789322200859",
+    "name": "Md  Rony",
+    "phone": "01403608152",
+    "address": "jhju gjki",
+    "note": "ghjkfhygcbhgh",
+    "products": [
+      {
+        "id": 1789322151339,
+        "name": "three pic",
+        "price": 1250,
+        "stock": 120,
+        "quantity": 1,
+        "image": "/uploads/1789322151319.jpeg"
+      }
+    ],
+    "total": 1250,
+    "status": "pending",
+    "createdAt": "2026-09-13T17:56:40.859Z"
+  },
+  {
+    "orderId": "SZ1789322330592",
+    "name": "Md",
+    "phone": "01403608156",
+    "address": "jhtfdgfg dfzg",
+    "note": "drftrtrdftgd",
+    "products": [
+      {
+        "id": 1,
+        "name": "ডিজাইনার থ্রি-পিস",
+        "price": 1200,
+        "stock": 70,
+        "quantity": 1,
+        "image": ""
+      },
+      {
+        "id": 1788970156662,
+        "name": "mangos ",
+        "price": 350,
+        "stock": 250,
+        "quantity": 2,
+        "image": "/uploads/1788970994906.jpg"
+      },
+      {
+        "id": 1788974998540,
+        "name": "myself ",
+        "price": 25,
+        "stock": 15,
+        "quantity": 1,
+        "image": "/uploads/1788974998534.png"
+      },
+      {
+        "id": 1789152558139,
+        "name": "Lipsticks ",
+        "price": 500,
+        "stock": 7,
+        "quantity": 1,
+        "image": "/uploads/1789152701848.jpg"
+      },
+      {
+        "id": 1789241937355,
+        "name": "good",
+        "price": 1254,
+        "stock": 24,
+        "quantity": 1,
+        "image": "/uploads/1789241937350.jpeg"
+      },
+      {
+        "id": 1789322151339,
+        "name": "three pic",
+        "price": 1250,
+        "stock": 120,
+        "quantity": 1,
+        "image": "/uploads/1789322151319.jpeg"
+      }
+    ],
+    "total": 4929,
+    "status": "confirmed",
+    "createdAt": "2026-09-13T17:58:50.592Z",
+    "notification": {
+      "message": "🎉 আপনার অর্ডারটি Confirm করা হয়েছে। SR Sajghor Fashion & Beauty-এর পক্ষ থেকে ধন্যবাদ ❤️",
+      "read": false,
+      "createdAt": "2026-09-13T18:54:59.263Z"
+    }
+  }
+]
