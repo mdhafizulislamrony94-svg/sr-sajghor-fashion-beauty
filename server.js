@@ -45,11 +45,12 @@ app.get("/admin-panel.html", (req, res) => {
 });
 
 app.use(express.static(__dirname));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ================= ADMIN LOGIN SESSION =================
 
 const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "SRadmin321@";
+const ADMIN_PASSWORD = "SRadmin123!";
 
 const adminSessions = new Set();
 
@@ -68,6 +69,23 @@ function getCookie(req, name) {
     return cookie.substring(name.length + 1);
 }
 
+// ================= ADMIN AUTH MIDDLEWARE =================
+
+function requireAdmin(req, res, next) {
+
+    const token = getCookie(req, "adminToken");
+
+    if (!token || !adminSessions.has(token)) {
+
+        return res.status(401).json({
+            success: false,
+            message: "Admin Login required"
+        });
+
+    }
+
+    next();
+}
 
 // ================= ADMIN LOGIN API =================
 
@@ -142,7 +160,12 @@ app.post("/api/admin/logout", (req, res) => {
 
 // ================= IMAGE UPLOAD =================
 
-const uploadDir = path.join(__dirname, "uploads");
+const storageRoot =
+    process.env.RAILWAY_VOLUME_MOUNT_PATH ||
+    path.join(__dirname, "storage");
+
+const uploadDir = path.join(storageRoot, "uploads");
+app.use("/uploads", express.static(uploadDir));
 
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, {
@@ -207,13 +230,15 @@ const upload = multer({
 
 // ================= VIDEO UPLOAD =================
 
-const videoDir = path.join(__dirname, "videos");
+const videoDir = path.join(storageRoot, "videos");
 
 if (!fs.existsSync(videoDir)) {
     fs.mkdirSync(videoDir, {
         recursive: true
     });
 }
+
+app.use("/videos", express.static(videoDir));
 
 const videoStorage = multer.diskStorage({
 
@@ -277,18 +302,9 @@ const videoUpload = multer({
 
 app.post(
     "/api/products/upload-image",
+    requireAdmin,
     upload.single("image"),
     (req, res) => {
-
-        // Admin Login Check
-const token = getCookie(req, "adminToken");
-
-if (!token || !adminSessions.has(token)) {
-    return res.status(401).json({
-        success: false,
-        message: "Admin Login required"
-    });
-}
 
         if (!req.file) {
 
@@ -318,53 +334,74 @@ if (!token || !adminSessions.has(token)) {
     }
 );
 
+// ================= VIDEO UPLOAD =================
+
 app.post(
     "/api/videos/upload",
-    function (req, res, next) {
-        if (!req.cookies || !req.cookies.adminToken) {
-            return res.status(401).json({
-                success: false,
-                message: "আগে Admin Login করুন"
-            });
-        }
 
-        next();
-    },
+    requireAdmin,
+
     videoUpload.single("video"),
+
     function (req, res) {
+
         if (!req.file) {
+
             return res.status(400).json({
                 success: false,
                 message: "কোনো ভিডিও নির্বাচন করা হয়নি"
             });
+
         }
 
-const productName = req.body.productName || "";
-const productPrice = req.body.productPrice || "";
+        const productName =
+            req.body.productName || "";
 
-const videoData = {
-    name: req.file.filename,
-    url: "/videos/" + req.file.filename,
-    productName: productName,
-    productPrice: productPrice,
-    createdAt: new Date().toISOString()
-};
+        const productPrice =
+            req.body.productPrice || "";
 
-videos.push(videoData);
+        const videoData = {
 
-saveVideos();
+            name: req.file.filename,
 
-res.json({
-    success: true,
-    message: "ভিডিও সফলভাবে আপলোড হয়েছে",
-    video: videoData
-});
+            url:
+                "/videos/" +
+                req.file.filename,
+
+            productName:
+                productName,
+
+            productPrice:
+                productPrice,
+
+            createdAt:
+                new Date().toISOString()
+
+        };
+
+        videos.push(videoData);
+
+        saveVideos();
+
+        res.json({
+
+            success: true,
+
+            message:
+                "ভিডিও সফলভাবে আপলোড হয়েছে",
+
+            video:
+                videoData
+
+        });
+
     }
 );
 
+
 // ================= VIDEO DATA =================
 
-const videosFile = path.join(__dirname, "videos.json");
+const videosFile = path.join(storageRoot, "videos.json");
 
 function loadVideos() {
 
@@ -535,17 +572,7 @@ app.get("/api/products", (req, res) => {
 
 // Add Product
 
-app.post("/api/products", (req, res) => {
-
-        // Admin Login Check
-    const token = getCookie(req, "adminToken");
-
-    if (!token || !adminSessions.has(token)) {
-        return res.status(401).json({
-            success: false,
-            message: "Admin Login required"
-        });
-    }
+app.post("/api/products", requireAdmin, (req, res) => {
 
     const {
         name,
@@ -626,7 +653,7 @@ console.log("📦 মোট Product:", products.length);
 
 // Update Product
 
-app.put("/api/products/:id", (req, res) => {
+app.put("/api/products/:id",requireAdmin, (req, res) => {
 
    // Admin Login Check
 const token = getCookie(req, "adminToken");
@@ -718,15 +745,7 @@ if (!token || !adminSessions.has(token)) {
 
 app.delete("/api/products/:id", (req, res) => {
 
-    // Admin Login Check
-const token = getCookie(req, "adminToken");
-
-if (!token || !adminSessions.has(token)) {
-    return res.status(401).json({
-        success: false,
-        message: "Admin Login required"
-    });
-}
+    // Admin Login Chec
 
     const id =
         Number(req.params.id);
@@ -970,17 +989,9 @@ app.post("/api/orders", (req, res) => {
 
 // ================= GET ADMIN ORDERS =================
 
-app.get("/api/orders", (req, res) => {
+app.get("/api/orders", requireAdmin, (req, res) => {
 
     // Admin Login Check
-    const token = getCookie(req, "adminToken");
-
-    if (!token || !adminSessions.has(token)) {
-        return res.status(401).json({
-            success: false,
-            message: "Admin Login required"
-        });
-    }
 
     res.json({
         success: true,
@@ -993,17 +1004,9 @@ app.get("/api/orders", (req, res) => {
 
 app.put(
     "/api/orders/:orderId/status",
+    requireAdmin,
     (req, res) => {
 
-        // Admin Login Check
-        const token = getCookie(req, "adminToken");
-
-        if (!token || !adminSessions.has(token)) {
-            return res.status(401).json({
-                success: false,
-                message: "Admin Login required"
-            });
-        }
 
         const orderId = req.params.orderId;
 
@@ -1201,17 +1204,8 @@ app.get(
 
 app.delete(
     "/api/orders/:orderId",
+    requireAdmin,
     (req, res) => {
-
-        // Admin Login Check
-        const token = getCookie(req, "adminToken");
-
-        if (!token || !adminSessions.has(token)) {
-            return res.status(401).json({
-                success: false,
-                message: "Admin Login required"
-            });
-        }
 
         const orderId =
             req.params.orderId;
@@ -1369,17 +1363,8 @@ app.get("/api/videos", (req, res) => {
 
 // ================= DELETE VIDEO =================
 
-app.delete("/api/videos/:filename", (req, res) => {
+app.delete("/api/videos/:filename", requireAdmin, (req, res) => {
 
-    // Admin Login Check
-    const token = getCookie(req, "adminToken");
-
-    if (!token || !adminSessions.has(token)) {
-        return res.status(401).json({
-            success: false,
-            message: "Admin Login required"
-        });
-    }
 
     const filename = path.basename(req.params.filename);
     const filePath = path.join(videoDir, filename);
