@@ -50,7 +50,7 @@
 
         .dashboard {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(6, 1fr);
             gap: 15px;
             margin-bottom: 25px;
     }
@@ -710,11 +710,11 @@ document.getElementById(
                     await productsResponse.json();
 
                 const oldProduct =
-                    productsData.products.find(
-                        item =>
-                            item.id === editingProductId
-                    );
-
+    productsData.products.find(
+        item =>
+            String(item.id) ===
+            String(editingProductId)
+    );
                 if (oldProduct) {
 
                     imageUrl =
@@ -931,7 +931,7 @@ async function editProduct(id) {
 
         const product =
             data.products.find(
-                item => item.id === id
+                item => String(item.id) === String(id)
             );
 
 
@@ -1355,7 +1355,9 @@ async function loadOrders() {
                 );
 
             });
+ // ================= APPLY FILTER =================
 
+    filterOrders();
 
     } catch (error) {
 
@@ -1524,10 +1526,34 @@ async function deleteOrder(orderId) {
 
 // ================= LOGOUT =================
 
-function logout() {
+async function logout() {
 
-    window.location.href =
-        "admin-login.html";
+    try {
+
+        const response =
+            await fetch(
+                "/api/admin/logout",
+                {
+                    method: "POST"
+                }
+            );
+
+        const data =
+            await response.json();
+
+        window.location.href =
+            "/admin-login.html";
+
+    } catch (error) {
+
+        console.error(
+            "Logout Error:",
+            error
+        );
+
+        window.location.href =
+            "/admin-login.html";
+    }
 
 }
 
@@ -1582,11 +1608,54 @@ function filterOrders() {
     });
 }
 
+// ================= ADMIN LOGIN CHECK =================
+
+async function checkAdminLogin() {
+
+    try {
+
+        const response =
+            await fetch("/api/admin/check", {
+                credentials: "include"
+            });
+
+        if (!response.ok) {
+
+            window.location.href =
+                "/admin-login.html";
+
+            return false;
+        }
+
+        return true;
+
+    } catch (error) {
+
+        console.error(
+            "Admin Login Check Error:",
+            error
+        );
+
+        window.location.href =
+            "/admin-login.html";
+
+        return false;
+    }
+}
+
 // ================= START =================
 
-loadProducts();
+(async function () {
 
-loadOrders();
+    const loggedIn = await checkAdminLogin();
+
+    if (!loggedIn) return;
+
+    loadProducts();
+    loadOrders();
+    loadAdminVideos();
+
+})();
 
 
 // ================= NEW ORDER NOTIFICATION =================
@@ -2090,6 +2159,32 @@ function printOrder(orderId) {
 </section>
 
 <script>
+
+async function checkAdminLogin() {
+
+    try {
+
+        const response =
+            await fetch("/api/admin/check");
+
+        if (!response.ok) {
+
+            window.location.href =
+                "/admin-login.html";
+
+            return false;
+        }
+
+        return true;
+
+    } catch (error) {
+
+        window.location.href =
+            "/admin-login.html";
+
+        return false;
+    }
+} 
 
 // ================= VIDEO LIST =================
 
