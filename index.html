@@ -2003,25 +2003,28 @@ if (customerOrderId) {
 
         products.forEach(product => {
 
-            let imageHTML = "";
+           let imageHTML = "";
 
-            if (
-                product.image &&
-                product.image.trim() !== ""
-            ) {
+if (product.image && product.image.trim() !== "") {
 
-                imageHTML = `
-                    <img
-                        src="${product.image}"
-                        alt="${product.name}"
-                        onerror="
-                        this.style.display='none';
-                        this.parentElement.innerHTML='<div class=no-image>🛍️</div>';
-                        "
-                    >
-                `;
+    const imagePath =
+        product.image.startsWith("/uploads/")
+            ? product.image
+            : "/uploads/" + product.image.split("/").pop();
 
-            } else {
+    imageHTML = `
+        <img
+            src="${imagePath}"
+            alt="${product.name}"
+            onerror="
+                console.error('Image load failed:', this.src);
+                this.style.display='none';
+                this.parentElement.innerHTML='<div class=no-image>🛍️</div>';
+            "
+        >
+    `;
+
+} else {
 
                 let icon = "🛍️";
 
@@ -2615,8 +2618,12 @@ function showProductDetails(product) {
     // Product Image
     if (product.image && product.image.trim() !== "") {
 
-        imageBox.innerHTML =
-            `<img src="${product.image}" alt="">`;
+       imageBox.innerHTML =
+         `<img src="${
+             product.image.startsWith("/uploads/")
+                 ? product.image
+                 : "/uploads/" + product.image
+         }" alt="${product.name}">`;
 
     } else {
 
