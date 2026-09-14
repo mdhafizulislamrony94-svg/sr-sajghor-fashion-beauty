@@ -49,7 +49,7 @@ app.use(express.static(__dirname));
 // ================= ADMIN LOGIN SESSION =================
 
 const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "SRadmin123!";
+const ADMIN_PASSWORD = "SRadmin321@";
 
 const adminSessions = new Set();
 
@@ -1359,8 +1359,6 @@ app.get("/api/reviews/:productId", (req, res) => {
     }
 });
 
-app.get("/api/reviews/:productId", (req, res) => {
-
     try {
 
         const productId =
@@ -1495,17 +1493,9 @@ server.on("error", (error) => {
     console.error(error);
 });
 
-server.on("error", (error) => {
-    console.error("❌ Server চালু করতে সমস্যা হয়েছে:");
-    console.error(error);
-});
 process.on("uncaughtException", (error) => {
     console.error("❌ UNCAUGHT ERROR:");
     console.error(error);
 });
 
-process.on("unhandledRejection", (error) => {
-    console.error("❌ UNHANDLED ERROR:");
-    console.error(error);
-});
 
