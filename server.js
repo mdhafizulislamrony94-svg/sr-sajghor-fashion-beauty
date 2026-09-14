@@ -1326,9 +1326,7 @@ app.post("/api/reviews", (req, res) => {
 // ================= GET PRODUCT REVIEWS =================
 
 app.get("/api/reviews/:productId", (req, res) => {
-
     try {
-
         const productId = String(req.params.productId);
 
         let reviews = [];
@@ -1349,7 +1347,6 @@ app.get("/api/reviews/:productId", (req, res) => {
         });
 
     } catch (error) {
-
         console.error("Get Reviews Error:", error);
 
         res.status(500).json({
@@ -1359,103 +1356,41 @@ app.get("/api/reviews/:productId", (req, res) => {
     }
 });
 
-    try {
-
-        const productId =
-            String(req.params.productId);
-
-        let reviews = [];
-
-        if (fs.existsSync(reviewsFile)) {
-
-            reviews = JSON.parse(
-
-                fs.readFileSync(
-                    reviewsFile,
-                    "utf8"
-                )
-
-            );
-
-        }
-
-        const productReviews =
-            reviews.filter(
-
-                review =>
-                    String(review.productId) ===
-                    productId
-
-            );
-
-        res.json({
-
-            success: true,
-
-            reviews: productReviews
-
-        });
-
-    } catch (error) {
-
-        console.error(
-            "Get Reviews Error:",
-            error
-        );
-
-        res.status(500).json({
-
-            success: false,
-
-            message:
-                "Review পাওয়া যায়নি।"
-
-        });
-
-    }
-
-});
-
-// ================= SERVER =================
 
 // ================= GET VIDEOS =================
 
-app.get("/api/videos", function (req, res) {
-
+app.get("/api/videos", (req, res) => {
     res.json({
         success: true,
         videos: videos
     });
-
 });
+
 
 // ================= DELETE VIDEO =================
 
-app.delete("/api/videos/:filename", function (req, res) {
+app.delete("/api/videos/:filename", (req, res) => {
 
     // Admin Login Check
-const token = getCookie(req, "adminToken");
+    const token = getCookie(req, "adminToken");
 
-if (!token || !adminSessions.has(token)) {
-    return res.status(401).json({
-        success: false,
-        message: "Admin Login required"
-    });
-}
+    if (!token || !adminSessions.has(token)) {
+        return res.status(401).json({
+            success: false,
+            message: "Admin Login required"
+        });
+    }
 
     const filename = path.basename(req.params.filename);
-
     const filePath = path.join(videoDir, filename);
 
-    fs.unlink(filePath, function (err) {
+    fs.unlink(filePath, (err) => {
 
         if (err) {
-
             return res.status(404).json({
                 success: false,
                 message: "ভিডিও পাওয়া যায়নি"
             });
-
         }
 
         // videos.json থেকেও ভিডিওটি বাদ দেওয়া
@@ -1469,10 +1404,9 @@ if (!token || !adminSessions.has(token)) {
             success: true,
             message: "ভিডিও সফলভাবে Delete হয়েছে"
         });
-
     });
-
 });
+
 
 // ================= SERVER =================
 
