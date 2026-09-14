@@ -1476,26 +1476,22 @@ if (!token || !adminSessions.has(token)) {
 
 // ================= SERVER =================
 
-const server = app.listen(
-    PORT,
-    "0.0.0.0",
-    () => {
-        console.log("=================================");
-        console.log("✅ SR Sajghor Server চালু হয়েছে!");
-        console.log("🌐 Server চলছে");
-        console.log("PORT:", PORT);
-        console.log("=================================");
-    }
-);
-
-server.on("error", (error) => {
-    console.error("❌ Server চালু করতে সমস্যা হয়েছে:");
-    console.error(error);
+const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log("=================================");
+    console.log("✅ SR Sajghor Server চালু হয়েছে!");
+    console.log("🌐 Server চলছে");
+    console.log("PORT:", PORT);
+    console.log("=================================");
 });
 
-process.on("uncaughtException", (error) => {
-    console.error("❌ UNCAUGHT ERROR:");
-    console.error(error);
+server.on("error", (err) => {
+    console.error("❌ Server Error:", err);
 });
 
+process.on("uncaughtException", (err) => {
+    console.error("❌ Uncaught Exception:", err);
+});
 
+process.on("unhandledRejection", (err) => {
+    console.error("❌ Unhandled Rejection:", err);
+});
