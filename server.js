@@ -7,7 +7,7 @@ const crypto = require("crypto");
 
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
@@ -1480,14 +1480,20 @@ if (!token || !adminSessions.has(token)) {
 
 const server = app.listen(
     PORT,
-    "127.0.0.1",
+    "0.0.0.0",
     () => {
         console.log("=================================");
         console.log("✅ SR Sajghor Server চালু হয়েছে!");
-        console.log("🌐 http://127.0.0.1:3000");
+        console.log("🌐 Server চলছে");
+        console.log("PORT:", PORT);
         console.log("=================================");
     }
 );
+
+server.on("error", (error) => {
+    console.error("❌ Server চালু করতে সমস্যা হয়েছে:");
+    console.error(error);
+});
 
 server.on("error", (error) => {
     console.error("❌ Server চালু করতে সমস্যা হয়েছে:");
