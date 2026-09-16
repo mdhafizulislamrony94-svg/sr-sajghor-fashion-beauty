@@ -1631,6 +1631,154 @@
     }
 }
 
+/* ================= NEW HEADER ================= */
+
+.main-header {
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+
+    width: 100%;
+    min-height: 72px;
+
+    display: flex;
+    align-items: center;
+    gap: 22px;
+
+    padding: 12px 5%;
+
+    background: linear-gradient(
+        135deg,
+        #d4145a,
+        #8e2de2
+    );
+
+    box-shadow:
+        0 4px 18px rgba(0,0,0,0.15);
+
+    box-sizing: border-box;
+}
+
+.main-header .logo {
+    flex-shrink: 0;
+    font-size: 25px;
+    font-weight: 800;
+    color: white;
+    background: none;
+    -webkit-text-fill-color: white;
+    white-space: nowrap;
+}
+
+.header-search {
+    flex: 1;
+    max-width: 650px;
+    height: 46px;
+
+    display: flex;
+    margin: 0 auto;
+}
+
+.header-search input {
+    flex: 1;
+    width: 100%;
+
+    padding: 0 18px;
+
+    border: none;
+    outline: none;
+
+    border-radius: 8px 0 0 8px;
+
+    background: white;
+    color: #333;
+
+    font-size: 15px;
+}
+
+.header-search input::placeholder {
+    color: #999;
+}
+
+.header-search button {
+    width: 55px;
+
+    border: none;
+    border-radius: 0 8px 8px 0;
+
+    background: #fff3f8;
+    color: #d4145a;
+
+    font-size: 20px;
+
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.header-search button:hover {
+    background: #ffe0ec;
+}
+
+.account-btn {
+    flex-shrink: 0;
+
+    color: white;
+    text-decoration: none;
+
+    font-size: 15px;
+    font-weight: 700;
+
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.account-btn:hover {
+    opacity: 0.8;
+}
+
+.header-icon {
+    flex-shrink: 0;
+
+    color: white !important;
+
+    font-size: 23px !important;
+
+    min-width: 35px;
+    min-height: 35px;
+
+    cursor: pointer;
+}
+
+@media (max-width: 800px) {
+
+    .main-header {
+        flex-wrap: wrap;
+        gap: 10px;
+
+        padding: 12px 4%;
+    }
+
+    .main-header .logo {
+        font-size: 21px;
+    }
+
+    .header-search {
+        order: 3;
+
+        flex-basis: 100%;
+
+        max-width: none;
+        width: 100%;
+    }
+
+    .account-btn {
+        font-size: 13px;
+    }
+
+    .header-icon {
+        font-size: 21px !important;
+    }
+}
+
     </style>
 </head>
 
@@ -1737,30 +1885,65 @@ loadVideos();
 </script>
 
 
-<!-- ================= HEADER ================= -->
+<!-- ================= NEW HEADER ================= -->
 
-<header>
+<header class="main-header">
 
     <div class="logo">
         🌸 SR সাজঘর
     </div>
 
-    <nav>
-        <a href="#">হোম</a>
-        <a href="#products">প্রোডাক্ট</a>
-        <a href="#categories">ক্যাটাগরি</a>
-        <a href="#contact">যোগাযোগ</a>
-    </nav>
+    <!-- Search -->
+    <div class="header-search">
 
-<div class="cart" onclick="showCart()">
-    🛒
-    <span id="cartCount">0</span>
-</div>
+        <input
+            type="text"
+            id="headerSearch"
+            placeholder="🔎 Search Products..."
+            oninput="
+                document.getElementById('productSearch').value = this.value;
+                filterProducts();
+            "
+        >
 
-<div class="wishlist" onclick="showWishlist()">
-    ❤️
-    <span id="wishlistCount">0</span>
-</div>
+        <button
+            type="button"
+            onclick="filterProducts()"
+        >
+            🔍
+        </button>
+
+    </div>
+
+    <!-- Account -->
+    <a
+        href="#"
+        class="account-btn"
+        onclick="
+            alert('👤 Customer Account শীঘ্রই চালু হবে!');
+            return false;
+        "
+    >
+        👤 Account
+    </a>
+
+    <!-- Wishlist -->
+    <div
+        class="wishlist header-icon"
+        onclick="showWishlist()"
+    >
+        ❤️
+        <span id="wishlistCount">0</span>
+    </div>
+
+    <!-- Cart -->
+    <div
+        class="cart header-icon"
+        onclick="showCart()"
+    >
+        🛒
+        <span id="cartCount">0</span>
+    </div>
 
 </header>
 
