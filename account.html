@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Customer Account | SR Sajghor</title>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #fff7fb;
+            min-height: 100vh;
+        }
+
+        .account-header {
+            background: linear-gradient(
+                135deg,
+                #d4145a,
+                #8e2de2
+            );
+
+            color: white;
+            padding: 18px 6%;
+            text-align: center;
+
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .account-header h1 {
+            font-size: 25px;
+        }
+
+        .account-container {
+            width: 90%;
+            max-width: 450px;
+
+            margin: 50px auto;
+
+            background: white;
+
+            padding: 30px;
+
+            border-radius: 18px;
+
+            box-shadow:
+                0 8px 30px rgba(120,40,100,0.12);
+        }
+
+        .account-container h2 {
+            text-align: center;
+            color: #d4145a;
+            margin-bottom: 25px;
+        }
+
+        .account-btn-box {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .account-action {
+            width: 100%;
+
+            padding: 14px;
+
+            border: none;
+            border-radius: 10px;
+
+            background: linear-gradient(
+                135deg,
+                #d4145a,
+                #8e2de2
+            );
+
+            color: white;
+
+            font-size: 16px;
+            font-weight: bold;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+        .account-action:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        .back-btn {
+            display: block;
+
+            margin-top: 20px;
+
+            text-align: center;
+
+            text-decoration: none;
+
+            color: #d4145a;
+
+            font-weight: bold;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <header class="account-header">
+
+        <h1>🌸 SR সাজঘর</h1>
+
+        <p>Customer Account</p>
+
+    </header>
+
+
+    <main class="account-container">
+
+        <!-- ================= ACCOUNT TITLE ================= -->
+
+        <h2>👤 My Account</h2>
+
+
+        <!-- ================= LOGIN / SIGNUP BUTTON ================= -->
+
+        <div class="account-btn-box">
+
+            <button
+                class="account-action"
+                onclick="showLogin()"
+            >
+                🔐 Login
+            </button>
+
+            <button
+                class="account-action"
+                onclick="showSignup()"
+            >
+                📝 Create Account
+            </button>
+
+        </div>
+
+
+        <!-- ================= PROFILE CARD ================= -->
+
+        <div class="profile-card">
+
+            <h2>👤 My Account</h2>
+
+            <div class="profile-info">
+
+                <p>
+                    <strong>নাম:</strong>
+                    <span id="customerName">
+                        লোড হচ্ছে...
+                    </span>
+                </p>
+
+                <p>
+                    <strong>📱 Mobile:</strong>
+                    <span id="customerPhone">
+                        লোড হচ্ছে...
+                    </span>
+                </p>
+
+                <p>
+                    <strong>📧 Email:</strong>
+                    <span id="customerEmail">
+                        লোড হচ্ছে...
+                    </span>
+                </p>
+
+                <p>
+                    <strong>🆔 Customer ID:</strong>
+                    <span id="customerId">
+                        লোড হচ্ছে...
+                    </span>
+                </p>
+
+            </div>
+
+
+            <!-- Logout Button -->
+
+            <button
+                 class="edit-profile-btn"
+                 onclick="showEditProfile()"
+>
+                 ✏️ Edit Profile
+            </button>
+
+            <button
+                class="logout-btn"
+                onclick="customerLogout()"
+            >
+                🚪 Logout
+            </button>
+
+        </div>
+
+
+        <!-- ================= DELIVERY ADDRESSES ================= -->
+
+<div class="addresses-card">
+
+    <h2>📍 My Delivery Addresses</h2>
+
+    <button
+        class="add-address-btn"
+        onclick="addCustomerAddress()"
+    >
+        ➕ Add New Address
+    </button>
+
+    <div id="customerAddresses">
+
+        <p>
+            ⏳ Address লোড হচ্ছে...
+        </p>
+
+    </div>
+
+</div>
+
+        <!-- ================= MY ORDERS ================= -->
+
+        <div class="orders-card">
+
+            <h2>📦 My Orders</h2>
+
+            <div id="customerOrders">
+
+                <p class="orders-loading">
+                    ⏳ Orders লোড হচ্ছে...
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================= BACK BUTTON ================= -->
+
+        <a
+            href="index.html"
+            class="back-btn"
+        >
+            ← Shopping এ ফিরে যান
+        </a>
+
+    </main>
+
+
+    <!-- ================= JAVASCRIPT ================= -->
+
+    <script>
+
+        // ================= CUSTOMER PROFILE =================
+
+        async function loadCustomerProfile() {
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/customer/me",
+                        {
+                            credentials: "include"
+                        }
+                    );
+
+                const data =
+                    await response.json();
+
+
+                if (
+                    !response.ok ||
+                    !data.success
+                ) {
+
+                    window.location.href =
+                        "/login.html";
+
+                    return;
+
+                }
+
+
+                const customer =
+                    data.customer;
+
+
+                document
+                    .getElementById("customerName")
+                    .textContent =
+                        customer.name;
+
+
+                document
+                    .getElementById("customerPhone")
+                    .textContent =
+                        customer.phone;
+
+
+                document
+                    .getElementById("customerEmail")
+                    .textContent =
+                        customer.email;
+
+
+                document
+                    .getElementById("customerId")
+                    .textContent =
+                        customer.customerId;
+
+
+            } catch (error) {
+
+                console.error(
+                    "Customer Profile Error:",
+                    error
+                );
+
+
+                window.location.href =
+                    "/login.html";
+
+            }
+
+        }
+
+
+        // Profile Load
+
+        loadCustomerProfile();
+
+
+   // ================= CUSTOMER MY ORDERS =================
+
+async function loadCustomerOrders() {
+
+    const ordersContainer =
+        document.getElementById("customerOrders");
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/customer/orders",
+                {
+                    credentials: "include"
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (
+            !response.ok ||
+            !data.success
+        ) {
+
+            if (response.status === 401) {
+
+                window.location.href =
+                    "/login.html";
+
+                return;
+            }
+
+            ordersContainer.innerHTML = `
+                <p>
+                    ❌ Orders লোড করা যায়নি।
+                </p>
+            `;
+
+            return;
+        }
+
+        const orders =
+            data.orders || [];
+
+
+        // কোনো Order না থাকলে
+
+        if (orders.length === 0) {
+
+            ordersContainer.innerHTML = `
+                <div class="no-orders">
+
+                    <p>
+                        📦 এখনো কোনো Order নেই।
+                    </p>
+
+                    <a
+                        href="index.html"
+                        class="shop-now-btn"
+                    >
+                        🛍️ Shopping শুরু করুন
+                    </a>
+
+                </div>
+            `;
+
+            return;
+        }
+
+
+        ordersContainer.innerHTML =
+            orders.map(order => {
+
+                const status =
+                    order.status || "pending";
+
+
+                // ================= STATUS TRACKING =================
+
+                const statusHTML = `
+
+                    <div class="status-tracking">
+
+                        <div class="status-step ${
+                            status === "pending" ||
+                            status === "confirmed" ||
+                            status === "delivered"
+                                ? "active"
+                                : ""
+                        }">
+
+                            <div class="status-icon">
+                                ⏳
+                            </div>
+
+                            <span>
+                                Pending
+                            </span>
+
+                        </div>
+
+
+                        <div class="status-line"></div>
+
+
+                        <div class="status-step ${
+                            status === "confirmed" ||
+                            status === "delivered"
+                                ? "active"
+                                : ""
+                        }">
+
+                            <div class="status-icon">
+                                ✅
+                            </div>
+
+                            <span>
+                                Confirmed
+                            </span>
+
+                        </div>
+
+
+                        <div class="status-line"></div>
+
+
+                        <div class="status-step ${
+                            status === "delivered"
+                                ? "active"
+                                : ""
+                        }">
+
+                            <div class="status-icon">
+                                🚚
+                            </div>
+
+                            <span>
+                                Delivered
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                `;
+
+
+                // ================= PRODUCTS =================
+
+                const productsHTML =
+                    Array.isArray(order.products)
+
+                        ? order.products.map(item => `
+
+                            <div class="order-product">
+
+                                <span>
+                                    🛍️
+                                    ${item.name || "Product"}
+                                </span>
+
+                                <span>
+                                    × ${item.quantity || 1}
+                                </span>
+
+                            </div>
+
+                        `).join("")
+
+                        : `
+
+                            <div class="order-product">
+
+                                🛍️ Product তথ্য পাওয়া যায়নি
+
+                            </div>
+
+                        `;
+
+
+                // ================= ORDER CARD =================
+
+                return `
+
+                    <div class="customer-order">
+
+
+                        <div class="order-header">
+
+                            <strong>
+                                📦 Order #${order.orderId || "N/A"}
+                            </strong>
+
+
+                            <span class="order-status">
+
+                                ${
+                                    status === "pending"
+                                        ? "⏳ Pending"
+                                        : status === "confirmed"
+                                        ? "✅ Confirmed"
+                                        : status === "delivered"
+                                        ? "🚚 Delivered"
+                                        : status === "cancelled"
+                                        ? "❌ Cancelled"
+                                        : status
+                                }
+
+                            </span>
+
+                        </div>
+
+
+                        ${statusHTML}
+
+
+                        <div class="order-details">
+
+
+                            <h3>
+                                🛍️ Products
+                            </h3>
+
+
+                            ${productsHTML}
+
+
+                            <p>
+
+                                💰
+
+                                <strong>
+                                    Total:
+                                </strong>
+
+                                ৳ ${Number(
+                                    order.total || 0
+                                ).toLocaleString("en-BD")}
+
+                            </p>
+
+
+                            <p>
+
+                                📍
+
+                                <strong>
+                                    Delivery Address:
+                                </strong>
+
+                                ${order.address || "N/A"}
+
+                            </p>
+
+
+                            <p>
+
+                                📅
+
+                                <strong>
+                                    Order Date:
+                                </strong>
+
+                                ${
+                                    order.createdAt
+                                        ? new Date(
+                                            order.createdAt
+                                          ).toLocaleString("en-BD")
+                                        : "N/A"
+                                }
+
+                            </p>
+
+
+                        </div>
+
+
+                    </div>
+
+                `;
+
+            }).join("");
+
+
+    } catch (error) {
+
+        console.error(
+            "Customer Orders Error:",
+            error
+        );
+
+
+        ordersContainer.innerHTML = `
+
+            <p>
+                ❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।
+            </p>
+
+        `;
+
+    }
+
+}
+
+
+// ================= LOAD MY ORDERS =================
+
+loadCustomerOrders();
+
+function showEditProfile() {
+
+    const name =
+        document.getElementById("customerName").textContent;
+
+    const email =
+        document.getElementById("customerEmail").textContent;
+
+    const newName =
+        prompt("আপনার নতুন নাম লিখুন:", name);
+
+    if (newName === null) {
+        return;
+    }
+
+    const newEmail =
+        prompt("আপনার নতুন Email লিখুন:", email);
+
+    if (newEmail === null) {
+        return;
+    }
+
+    updateCustomerProfile(
+        newName.trim(),
+        newEmail.trim()
+    );
+}
+
+
+async function updateCustomerProfile(name, email) {
+
+    if (!name || !email) {
+
+        alert(
+            "❌ Name এবং Email খালি রাখা যাবে না।"
+        );
+
+        return;
+    }
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/customer/profile",
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    credentials: "include",
+
+                    body: JSON.stringify({
+                        name: name,
+                        email: email
+                    })
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (!response.ok || !data.success) {
+
+            alert(
+                data.message ||
+                "Profile Update করা যায়নি।"
+            );
+
+            return;
+        }
+
+        alert(
+            "✅ Profile সফলভাবে Update হয়েছে!"
+        );
+
+        loadCustomerProfile();
+
+    } catch (error) {
+
+        console.error(
+            "Profile Update Error:",
+            error
+        );
+
+        alert(
+            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।"
+        );
+    }
+}
+
+// ================= LOAD CUSTOMER ADDRESSES =================
+
+async function loadCustomerAddresses() {
+
+    const container =
+        document.getElementById(
+            "customerAddresses"
+        );
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/customer/addresses",
+                {
+                    credentials: "include"
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (
+            !response.ok ||
+            !data.success
+        ) {
+
+            if (response.status === 401) {
+
+                window.location.href =
+                    "/login.html";
+
+                return;
+            }
+
+            container.innerHTML = `
+                <p>
+                    ❌ Address লোড করা যায়নি।
+                </p>
+            `;
+
+            return;
+        }
+
+        const addresses =
+            data.addresses || [];
+
+        if (addresses.length === 0) {
+
+            container.innerHTML = `
+                <p>
+                    📍 এখনো কোনো Delivery Address যোগ করা হয়নি।
+                </p>
+            `;
+
+            return;
+        }
+
+        container.innerHTML =
+            addresses.map(address => `
+
+                <div class="customer-address">
+
+                    <h3>
+                        📍 ${address.label || "Address"}
+                    </h3>
+
+                    <p>
+                        ${address.address || ""}
+                    </p>
+
+                </div>
+
+            `).join("");
+
+    } catch (error) {
+
+        console.error(
+            "Customer Address Error:",
+            error
+        );
+
+        container.innerHTML = `
+            <p>
+                ❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।
+            </p>
+        `;
+    }
+}
+
+
+// ================= ADD CUSTOMER ADDRESS =================
+
+async function addCustomerAddress() {
+
+    const label =
+        prompt(
+            "Address-এর নাম দিন:",
+            "Home"
+        );
+
+    if (label === null) {
+        return;
+    }
+
+    const address =
+        prompt(
+            "সম্পূর্ণ Delivery Address লিখুন:"
+        );
+
+    if (
+        address === null ||
+        !address.trim()
+    ) {
+
+        alert(
+            "❌ Delivery Address লিখুন।"
+        );
+
+        return;
+    }
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/customer/addresses",
+                {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    credentials: "include",
+
+                    body: JSON.stringify({
+
+                        label:
+                            label.trim(),
+
+                        address:
+                            address.trim()
+
+                    })
+
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (
+            !response.ok ||
+            !data.success
+        ) {
+
+            alert(
+                data.message ||
+                "Address যোগ করা যায়নি।"
+            );
+
+            return;
+        }
+
+        alert(
+            "✅ Delivery Address যোগ হয়েছে!"
+        );
+
+        loadCustomerAddresses();
+
+    } catch (error) {
+
+        console.error(
+            "Add Address Error:",
+            error
+        );
+
+        alert(
+            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।"
+        );
+    }
+}
+
+
+// ================= LOAD ADDRESSES =================
+
+loadCustomerAddresses();
+
+// ================= CUSTOMER LOGOUT =================
+
+        async function customerLogout() {
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/customer/logout",
+                        {
+                            method: "POST",
+                            credentials: "include"
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (
+                    response.ok &&
+                    data.success
+                ) {
+
+                    window.location.href =
+                        "/login.html";
+
+                    return;
+
+                }
+
+
+                alert(
+                    data.message ||
+                    "Logout করা যায়নি।"
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Logout Error:",
+                    error
+                );
+
+
+                alert(
+                    "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।"
+                );
+
+            }
+
+        }
+
+
+        // ================= LOGIN BUTTON =================
+
+        function showLogin() {
+
+            window.location.href =
+                "/login.html";
+
+        }
+
+
+        // ================= SIGNUP BUTTON =================
+
+        function showSignup() {
+
+            window.location.href =
+                "/login.html";
+
+        }
+
+    </script>
+
+
+</body>
+
+</html>
