@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Create Account | SR Sajghor</title>
+
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            font-family:
+                Arial,
+                "Noto Sans Bengali",
+                sans-serif;
+
+            min-height: 100vh;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #fff0f7,
+                    #f4eaff
+                );
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            padding: 25px;
+        }
+
+
+        .signup-container {
+
+            width: 100%;
+
+            max-width: 470px;
+
+            background: white;
+
+            padding: 35px;
+
+            border-radius: 22px;
+
+            box-shadow:
+                0 12px 40px
+                rgba(120, 40, 100, 0.15);
+        }
+
+
+        .logo {
+
+            text-align: center;
+
+            font-size: 28px;
+
+            font-weight: 800;
+
+            color: #d4145a;
+
+            margin-bottom: 8px;
+        }
+
+
+        .subtitle {
+
+            text-align: center;
+
+            color: #777;
+
+            font-size: 14px;
+
+            margin-bottom: 28px;
+        }
+
+
+        .signup-title {
+
+            text-align: center;
+
+            color: #333;
+
+            font-size: 23px;
+
+            margin-bottom: 25px;
+        }
+
+
+        .form-group {
+
+            margin-bottom: 17px;
+        }
+
+
+        .form-group label {
+
+            display: block;
+
+            margin-bottom: 7px;
+
+            color: #444;
+
+            font-size: 14px;
+
+            font-weight: 600;
+        }
+
+
+        .form-group input {
+
+            width: 100%;
+
+            height: 48px;
+
+            padding: 0 14px;
+
+            border: 1px solid #ddd;
+
+            border-radius: 10px;
+
+            outline: none;
+
+            font-size: 15px;
+
+            transition: 0.2s;
+        }
+
+
+        .form-group input:focus {
+
+            border-color: #d4145a;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(212, 20, 90, 0.08);
+        }
+
+
+        .password-box {
+
+            position: relative;
+        }
+
+
+        .password-box input {
+
+            padding-right: 50px;
+        }
+
+
+        .show-password {
+
+            position: absolute;
+
+            right: 14px;
+
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            border: none;
+
+            background: none;
+
+            cursor: pointer;
+
+            font-size: 18px;
+        }
+
+
+        .signup-btn {
+
+            width: 100%;
+
+            height: 50px;
+
+            margin-top: 8px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #d4145a,
+                    #8e2de2
+                );
+
+            color: white;
+
+            font-size: 16px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+
+        .signup-btn:hover {
+
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 6px 18px
+                rgba(142, 45, 226, 0.25);
+        }
+
+
+        .login-text {
+
+            text-align: center;
+
+            margin-top: 22px;
+
+            color: #666;
+
+            font-size: 14px;
+        }
+
+
+        .login-text a {
+
+            color: #d4145a;
+
+            font-weight: bold;
+
+            text-decoration: none;
+        }
+
+
+        .back-home {
+
+            display: block;
+
+            text-align: center;
+
+            margin-top: 15px;
+
+            color: #777;
+
+            text-decoration: none;
+
+            font-size: 13px;
+        }
+
+
+        .message {
+
+            display: none;
+
+            margin-bottom: 18px;
+
+            padding: 12px;
+
+            border-radius: 8px;
+
+            text-align: center;
+
+            font-size: 14px;
+        }
+
+
+        .message.error {
+
+            display: block;
+
+            background: #ffe8ed;
+
+            color: #c62828;
+        }
+
+
+        .message.success {
+
+            display: block;
+
+            background: #e8fff1;
+
+            color: #168544;
+        }
+
+
+        @media (max-width: 500px) {
+
+            body {
+                padding: 15px;
+            }
+
+            .signup-container {
+                padding: 25px 20px;
+            }
+
+            .logo {
+                font-size: 24px;
+            }
+
+            .signup-title {
+                font-size: 21px;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <div class="signup-container">
+
+
+        <div class="logo">
+            🌸 SR সাজঘর
+        </div>
+
+
+        <div class="subtitle">
+            Fashion & Beauty
+        </div>
+
+
+        <h1 class="signup-title">
+            📝 Create Account
+        </h1>
+
+
+        <div
+            id="message"
+            class="message"
+        ></div>
+
+
+        <form
+            id="signupForm"
+        >
+
+
+            <!-- Name -->
+
+            <div class="form-group">
+
+                <label for="name">
+                    👤 আপনার নাম
+                </label>
+
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    placeholder="আপনার পূর্ণ নাম লিখুন"
+                    required
+                >
+
+            </div>
+
+
+            <!-- Phone -->
+
+            <div class="form-group">
+
+                <label for="phone">
+                    📱 মোবাইল নম্বর
+                </label>
+
+                <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    placeholder="01XXXXXXXXX"
+                    maxlength="11"
+                    required
+                >
+
+            </div>
+
+
+            <!-- Email -->
+
+            <div class="form-group">
+
+                <label for="email">
+                    📧 Email
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="example@email.com"
+                    required
+                >
+
+            </div>
+
+
+            <!-- Password -->
+
+            <div class="form-group">
+
+                <label for="password">
+                    🔐 Password
+                </label>
+
+                <div class="password-box">
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="কমপক্ষে ৬ অক্ষর"
+                        minlength="6"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        class="show-password"
+                        onclick="togglePassword('password', this)"
+                    >
+                        👁️
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- Confirm Password -->
+
+            <div class="form-group">
+
+                <label for="confirmPassword">
+                    🔐 Confirm Password
+                </label>
+
+                <div class="password-box">
+
+                    <input
+                        type="password"
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        placeholder="Password আবার লিখুন"
+                        minlength="6"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        class="show-password"
+                        onclick="togglePassword('confirmPassword', this)"
+                    >
+                        👁️
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="signup-btn"
+            >
+                📝 Create Account
+            </button>
+
+
+        </form>
+
+
+        <div class="login-text">
+
+            আগে থেকেই Account আছে?
+
+            <a href="login.html">
+                Login করুন
+            </a>
+
+        </div>
+
+
+        <a
+            href="index.html"
+            class="back-home"
+        >
+            ← Shopping এ ফিরে যান
+        </a>
+
+
+    </div>
+
+
+<script>
+
+document
+    .getElementById("signupForm")
+    .addEventListener(
+        "submit",
+        async function(event) {
+
+            event.preventDefault();
+
+
+            const name =
+                document
+                    .getElementById("name")
+                    .value
+                    .trim();
+
+
+            const phone =
+                document
+                    .getElementById("phone")
+                    .value
+                    .trim();
+
+
+            const email =
+                document
+                    .getElementById("email")
+                    .value
+                    .trim();
+
+
+            const password =
+                document
+                    .getElementById("password")
+                    .value;
+
+
+            const confirmPassword =
+                document
+                    .getElementById("confirmPassword")
+                    .value;
+
+
+            const message =
+                document
+                    .getElementById("message");
+
+
+            message.className =
+                "message";
+
+
+            // ================= PASSWORD MATCH =================
+
+            if (
+                password !==
+                confirmPassword
+            ) {
+
+                message.textContent =
+                    "❌ Password দুইটি একই নয়।";
+
+                message.classList.add(
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            // ================= PASSWORD LENGTH =================
+
+            if (
+                password.length < 6
+            ) {
+
+                message.textContent =
+                    "❌ Password কমপক্ষে ৬ অক্ষরের হতে হবে।";
+
+                message.classList.add(
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            // ================= PHONE CHECK =================
+
+            if (
+                !/^01[3-9]\d{8}$/
+                    .test(phone)
+            ) {
+
+                message.textContent =
+                    "❌ সঠিক ১১ সংখ্যার মোবাইল নম্বর দিন।";
+
+                message.classList.add(
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            // ================= SEND TO BACKEND =================
+
+            try {
+
+                message.textContent =
+                    "⏳ Account তৈরি হচ্ছে...";
+
+                message.classList.add(
+                    "success"
+                );
+
+
+                const response =
+                    await fetch(
+                        "/api/customer/signup",
+                        {
+
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify({
+
+                                    name:
+                                        name,
+
+                                    phone:
+                                        phone,
+
+                                    email:
+                                        email,
+
+                                    password:
+                                        password
+
+                                })
+
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                // ================= SUCCESS =================
+
+                if (
+                    response.ok &&
+                    data.success
+                ) {
+
+                    message.className =
+                        "message success";
+
+                    message.textContent =
+                        "🎉 Account সফলভাবে তৈরি হয়েছে!";
+
+                    console.log(
+                        "Customer Created:",
+                        data.customer
+                    );
+
+
+                    setTimeout(
+                        function() {
+
+                            window.location.href =
+                                "login.html";
+
+                        },
+                        1500
+                    );
+
+
+                    return;
+
+                }
+
+
+                // ================= SERVER ERROR =================
+
+                message.className =
+                    "message error";
+
+                message.textContent =
+                    "❌ " +
+                    (
+                        data.message ||
+                        "Account তৈরি করা যায়নি।"
+                    );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Signup Error:",
+                    error
+                );
+
+
+                message.className =
+                    "message error";
+
+                message.textContent =
+                    "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।";
+
+            }
+
+        }
+    );
+
+
+</script>
+
+</body>
+
+</html>
