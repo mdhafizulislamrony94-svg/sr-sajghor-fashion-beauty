@@ -161,17 +161,21 @@ app.post("/api/admin/logout", (req, res) => {
 // ================= IMAGE UPLOAD =================
 
 const storageRoot =
-    process.env.RAILWAY_VOLUME_MOUNT_PATH ||
-    path.join(__dirname, "storage");
+    process.env.RAILWAY_VOLUME_MOUNT_PATH || "/data";
 
-const uploadDir = path.join(storageRoot, "uploads");
-app.use("/uploads", express.static(uploadDir));
+const uploadDir =
+    path.join(storageRoot, "uploads");
 
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, {
         recursive: true
     });
 }
+
+app.use(
+    "/uploads",
+    express.static(uploadDir)
+);
 
 const storage = multer.diskStorage({
 
@@ -805,7 +809,24 @@ app.post("/api/orders", (req, res) => {
         total
     } = req.body;
 
+// ================= CUSTOMER ID =================
 
+let customerId = null;
+
+const customerToken =
+    req.cookies.customerToken;
+
+if (
+    customerToken &&
+    global.customerSessions
+) {
+
+    customerId =
+        global.customerSessions.get(
+            customerToken
+        ) || null;
+
+}
     // ================= BASIC CHECK =================
 
     if (
@@ -928,34 +949,37 @@ app.post("/api/orders", (req, res) => {
 
     const newOrder = {
 
-        orderId:
-            orderId,
+    orderId:
+        orderId,
 
-        name:
-            name,
+    customerId:
+        customerId,
 
-        phone:
-            phone,
+    name:
+        name,
 
-        address:
-            address,
+    phone:
+        phone,
 
-        note:
-            note || "",
+    address:
+        address,
 
-        products:
-            orderedProducts,
+    note:
+        note || "",
 
-        total:
-            Number(total),
+    products:
+        orderedProducts,
 
-        status:
-            "pending",
+    total:
+        Number(total),
 
-        createdAt:
-            new Date().toISOString()
+    status:
+        "pending",
 
-    };
+    createdAt:
+        new Date().toISOString()
+
+};
 
 
     orders.push(newOrder);
@@ -1252,6 +1276,1137 @@ app.delete(
 
     }
 );
+
+// ================= CUSTOMER ACCOUNT SYSTEM =================
+
+const customersFile = path.join(__dirname, "customers.json");
+
+function loadCustomers() {
+
+    if (!fs.existsSync(customersFile)) {
+
+        fs.writeFileSync(
+            customersFile,
+            "[]",
+            "utf8"
+        );
+
+        return [];
+    }
+
+    try {
+
+        const data =
+            fs.readFileSync(
+                customersFile,
+                "utf8"
+            );
+
+        return JSON.parse(data);
+
+    } catch (error) {
+
+        console.error(
+            "❌ customers.json পড়া যায়নি:",
+            error
+        );
+
+        return [];
+    }
+}
+
+
+let customers = loadCustomers();
+
+
+function saveCustomers() {
+
+    fs.writeFileSync(
+        customersFile,
+        JSON.stringify(
+            customers,
+            null,
+            2
+        ),
+        "utf8"
+    );
+
+}
+
+
+// ================= PASSWORD HASH =================
+
+function hashPassword(password) {
+
+    const salt =
+        crypto.randomBytes(16).toString("hex");
+
+    const hash =
+        crypto
+            .scryptSync(
+                password,
+                salt,
+                64
+            )
+            .toString("hex");
+
+    return {
+        salt: salt,
+        hash: hash
+    };
+}
+
+
+// ================= CUSTOMER SIGNUP API =================
+
+app.post(
+    "/api/customer/signup",
+    (req, res) => {
+
+        try {
+
+            const {
+                name,
+                phone,
+                email,
+                password
+            } = req.body;
+
+
+            // ================= BASIC CHECK =================
+
+            if (
+                !name ||
+                !phone ||
+                !email ||
+                !password
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "সব তথ্য পূরণ করুন।"
+
+                });
+
+            }
+
+
+            // ================= PASSWORD CHECK =================
+
+            if (password.length < 6) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Password কমপক্ষে ৬ অক্ষরের হতে হবে।"
+
+                });
+
+            }
+
+
+            // ================= PHONE CHECK =================
+
+            if (
+                !/^01[3-9]\d{8}$/.test(phone)
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "সঠিক ১১ সংখ্যার মোবাইল নম্বর দিন।"
+
+                });
+
+            }
+
+
+            // ================= EMAIL CHECK =================
+
+            const normalizedEmail =
+                email.trim().toLowerCase();
+
+
+            // ================= DUPLICATE CHECK =================
+
+            const existingCustomer =
+                customers.find(
+                    customer =>
+                        customer.email ===
+                            normalizedEmail ||
+                        customer.phone ===
+                            phone
+                );
+
+
+            if (existingCustomer) {
+
+                return res.status(409).json({
+
+                    success: false,
+
+                    message:
+                        "এই Email অথবা Mobile Number দিয়ে Account আগে থেকেই আছে।"
+
+                });
+
+            }
+
+
+            // ================= PASSWORD HASH =================
+
+            const passwordData =
+                hashPassword(password);
+
+
+            // ================= CREATE CUSTOMER =================
+
+            const newCustomer = {
+
+                customerId:
+                    "CUS" + Date.now(),
+
+                name:
+                    name.trim(),
+
+                phone:
+                    phone,
+
+                email:
+                    normalizedEmail,
+
+                passwordHash:
+                    passwordData.hash,
+
+                passwordSalt:
+                    passwordData.salt,
+
+                createdAt:
+                    new Date().toISOString()
+
+            };
+
+
+            // ================= SAVE =================
+
+            customers.push(
+                newCustomer
+            );
+
+            saveCustomers();
+
+
+            console.log(
+                "✅ নতুন Customer Account তৈরি হয়েছে:",
+                newCustomer.customerId
+            );
+
+
+            // ================= RESPONSE =================
+
+            res.status(201).json({
+
+                success: true,
+
+                message:
+                    "🎉 Customer Account সফলভাবে তৈরি হয়েছে!",
+
+                customer: {
+
+                    customerId:
+                        newCustomer.customerId,
+
+                    name:
+                        newCustomer.name,
+
+                    phone:
+                        newCustomer.phone,
+
+                    email:
+                        newCustomer.email
+
+                }
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "❌ Customer Signup Error:",
+                error
+            );
+
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Account তৈরি করা যায়নি।"
+
+            });
+
+        }
+
+    }
+);
+
+// ================= CUSTOMER LOGIN SYSTEM =================
+
+function verifyPassword(password, salt, storedHash) {
+
+    const hash =
+        crypto
+            .scryptSync(
+                password,
+                salt,
+                64
+            )
+            .toString("hex");
+
+    return crypto.timingSafeEqual(
+        Buffer.from(hash, "hex"),
+        Buffer.from(storedHash, "hex")
+    );
+
+}
+
+
+// ================= CUSTOMER LOGIN API =================
+
+app.post(
+    "/api/customer/login",
+    (req, res) => {
+
+        try {
+
+            const {
+                login,
+                password
+            } = req.body;
+
+
+            // ================= BASIC CHECK =================
+
+            if (
+                !login ||
+                !password
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Email/Mobile এবং Password দিন।"
+
+                });
+
+            }
+
+
+            const normalizedLogin =
+                login.trim().toLowerCase();
+
+
+            // ================= FIND CUSTOMER =================
+
+            const customer =
+                customers.find(
+                    customer =>
+                        customer.email ===
+                            normalizedLogin ||
+                        customer.phone ===
+                            login.trim()
+                );
+
+
+            if (!customer) {
+
+                return res.status(401).json({
+
+                    success: false,
+
+                    message:
+                        "Email অথবা Mobile Number পাওয়া যায়নি।"
+
+                });
+
+            }
+
+
+            // ================= PASSWORD VERIFY =================
+
+            const passwordCorrect =
+                verifyPassword(
+                    password,
+                    customer.passwordSalt,
+                    customer.passwordHash
+                );
+
+
+            if (!passwordCorrect) {
+
+                return res.status(401).json({
+
+                    success: false,
+
+                    message:
+                        "Password সঠিক নয়।"
+
+                });
+
+            }
+
+
+            // ================= CUSTOMER SESSION =================
+
+            const customerToken =
+                crypto
+                    .randomBytes(32)
+                    .toString("hex");
+
+
+            // Customer session-এর জন্য
+            // temporary memory storage
+
+            if (
+                !global.customerSessions
+            ) {
+
+                global.customerSessions =
+                    new Map();
+
+            }
+
+
+            global.customerSessions.set(
+                customerToken,
+                customer.customerId
+            );
+
+
+            // ================= COOKIE =================
+
+            res.cookie(
+                "customerToken",
+                customerToken,
+                {
+
+                    httpOnly: true,
+
+                    sameSite: "lax",
+
+                    secure:
+                        process.env.NODE_ENV ===
+                        "production",
+
+                    maxAge:
+                        7 * 24 * 60 * 60 * 1000
+
+                }
+            );
+
+
+            // ================= SUCCESS =================
+
+            console.log(
+                "✅ Customer Login:",
+                customer.customerId
+            );
+
+
+            res.json({
+
+                success: true,
+
+                message:
+                    "Customer Login সফল হয়েছে!",
+
+                customer: {
+
+                    customerId:
+                        customer.customerId,
+
+                    name:
+                        customer.name,
+
+                    phone:
+                        customer.phone,
+
+                    email:
+                        customer.email
+
+                }
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "❌ Customer Login Error:",
+                error
+            );
+
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Login করা যায়নি।"
+
+            });
+
+        }
+
+    }
+);
+
+// ================= CUSTOMER LOGOUT API =================
+
+app.post(
+    "/api/customer/logout",
+    (req, res) => {
+
+        try {
+
+            const token =
+                req.cookies.customerToken;
+
+            if (token && global.customerSessions) {
+
+                global.customerSessions.delete(token);
+
+            }
+
+            res.clearCookie(
+                "customerToken",
+                {
+                    httpOnly: true,
+                    sameSite: "lax",
+                    secure:
+                        process.env.NODE_ENV ===
+                        "production"
+                }
+            );
+
+            res.json({
+
+                success: true,
+
+                message:
+                    "Customer Logout সফল হয়েছে!"
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "❌ Customer Logout Error:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Logout করা যায়নি।"
+
+            });
+
+        }
+
+    }
+);
+
+// ================= CUSTOMER MY ORDERS API =================
+
+app.get(
+    "/api/customer/orders",
+    (req, res) => {
+
+        try {
+
+            const token =
+                req.cookies.customerToken;
+
+            if (!token || !global.customerSessions) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Customer Login করা নেই।"
+                });
+
+            }
+
+            const customerId =
+                global.customerSessions.get(token);
+
+            if (!customerId) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Session expired। আবার Login করুন।"
+                });
+
+            }
+
+            const customer =
+                customers.find(
+                    customer =>
+                        customer.customerId ===
+                        customerId
+                );
+
+            if (!customer) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Customer পাওয়া যায়নি।"
+                });
+
+            }
+
+            const ordersFile =
+                path.join(__dirname, "orders.json");
+
+            let orders = [];
+
+            if (fs.existsSync(ordersFile)) {
+
+                try {
+
+                    orders =
+                        JSON.parse(
+                            fs.readFileSync(
+                                ordersFile,
+                                "utf8"
+                            )
+                        );
+
+                } catch (error) {
+
+                    orders = [];
+
+                }
+
+            }
+
+            const customerOrders =
+                orders.filter(order =>
+
+                    order.customerId ===
+                    customerId
+
+                );
+
+            res.json({
+
+                success: true,
+
+                orders:
+                    customerOrders
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "❌ Customer Orders Error:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Order History পাওয়া যায়নি।"
+
+            });
+
+        }
+
+    }
+);
+
+// ================= CUSTOMER PROFILE API =================
+
+app.get(
+    "/api/customer/me",
+    (req, res) => {
+
+        try {
+
+            const token =
+                req.cookies.customerToken;
+
+            if (!token) {
+
+                return res.status(401).json({
+                    success: false,
+                    message: "Customer Login করা নেই।"
+                });
+
+            }
+
+            if (!global.customerSessions) {
+
+                return res.status(401).json({
+                    success: false,
+                    message: "Session পাওয়া যায়নি।"
+                });
+
+            }
+
+            const customerId =
+                global.customerSessions.get(token);
+
+            if (!customerId) {
+
+                return res.status(401).json({
+                    success: false,
+                    message: "Session expired। আবার Login করুন।"
+                });
+
+            }
+
+            const customer =
+                customers.find(
+                    customer =>
+                        customer.customerId ===
+                        customerId
+                );
+
+            if (!customer) {
+
+                return res.status(404).json({
+                    success: false,
+                    message: "Customer পাওয়া যায়নি।"
+                });
+
+            }
+
+            res.json({
+
+                success: true,
+
+                customer: {
+
+                    customerId:
+                        customer.customerId,
+
+                    name:
+                        customer.name,
+
+                    phone:
+                        customer.phone,
+
+                    email:
+                        customer.email
+
+                }
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "❌ Customer Profile Error:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Customer তথ্য পাওয়া যায়নি।"
+            });
+
+        }
+
+    }
+);
+
+// ================= CUSTOMER PROFILE UPDATE API =================
+
+app.put(
+    "/api/customer/profile",
+    (req, res) => {
+
+        try {
+
+            const token =
+                req.cookies.customerToken;
+
+            if (
+                !token ||
+                !global.customerSessions
+            ) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Customer Login করা নেই।"
+                });
+            }
+
+            const customerId =
+                global.customerSessions.get(token);
+
+            if (!customerId) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Session expired। আবার Login করুন।"
+                });
+            }
+
+            const customer =
+                customers.find(
+                    customer =>
+                        customer.customerId ===
+                        customerId
+                );
+
+            if (!customer) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Customer পাওয়া যায়নি।"
+                });
+            }
+
+
+            const {
+                name,
+                email
+            } = req.body;
+
+
+            if (!name || !email) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Name এবং Email পূরণ করুন।"
+                });
+            }
+
+
+            const normalizedEmail =
+                email.trim().toLowerCase();
+
+
+            const emailExists =
+                customers.some(
+                    otherCustomer =>
+                        otherCustomer.customerId !==
+                            customerId &&
+                        otherCustomer.email ===
+                            normalizedEmail
+                );
+
+
+            if (emailExists) {
+
+                return res.status(409).json({
+                    success: false,
+                    message:
+                        "এই Email দিয়ে অন্য একটি Account আছে।"
+                });
+            }
+
+
+            customer.name =
+                name.trim();
+
+            customer.email =
+                normalizedEmail;
+
+
+            saveCustomers();
+
+
+            console.log(
+                "✅ Customer Profile Updated:",
+                customer.customerId
+            );
+
+
+            res.json({
+
+                success: true,
+
+                message:
+                    "Profile সফলভাবে Update হয়েছে!",
+
+                customer: {
+
+                    customerId:
+                        customer.customerId,
+
+                    name:
+                        customer.name,
+
+                    phone:
+                        customer.phone,
+
+                    email:
+                        customer.email
+
+                }
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "❌ Customer Profile Update Error:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Profile Update করা যায়নি।"
+
+            });
+
+        }
+
+    }
+);
+
+
+// ================= CUSTOMER ADDRESS API =================
+
+// Customer-এর Address List দেখা
+app.get(
+    "/api/customer/addresses",
+    (req, res) => {
+
+        try {
+
+            const token =
+                req.cookies.customerToken;
+
+            if (
+                !token ||
+                !global.customerSessions
+            ) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Customer Login করা নেই।"
+                });
+            }
+
+            const customerId =
+                global.customerSessions.get(token);
+
+            if (!customerId) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Session expired। আবার Login করুন।"
+                });
+            }
+
+            const customer =
+                customers.find(
+                    customer =>
+                        customer.customerId ===
+                        customerId
+                );
+
+            if (!customer) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Customer পাওয়া যায়নি।"
+                });
+            }
+
+            res.json({
+                success: true,
+                addresses:
+                    customer.addresses || []
+            });
+
+        } catch (error) {
+
+            console.error(
+                "❌ Customer Address Error:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Address পাওয়া যায়নি।"
+            });
+        }
+    }
+);
+
+
+// ================= ADD CUSTOMER ADDRESS =================
+
+app.post(
+    "/api/customer/addresses",
+    (req, res) => {
+
+        try {
+
+            const token =
+                req.cookies.customerToken;
+
+            if (
+                !token ||
+                !global.customerSessions
+            ) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Customer Login করা নেই।"
+                });
+            }
+
+            const customerId =
+                global.customerSessions.get(token);
+
+            if (!customerId) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Session expired। আবার Login করুন।"
+                });
+            }
+
+            const customer =
+                customers.find(
+                    customer =>
+                        customer.customerId ===
+                        customerId
+                );
+
+            if (!customer) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Customer পাওয়া যায়নি।"
+                });
+            }
+
+
+            const {
+                label,
+                address
+            } = req.body;
+
+
+            if (!address || !address.trim()) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Delivery Address লিখুন।"
+                });
+            }
+
+
+            if (!customer.addresses) {
+                customer.addresses = [];
+            }
+
+
+            const newAddress = {
+
+                id:
+                    "ADDR" +
+                    Date.now(),
+
+                label:
+                    label &&
+                    label.trim()
+                        ? label.trim()
+                        : "Home",
+
+                address:
+                    address.trim(),
+
+                createdAt:
+                    new Date().toISOString()
+
+            };
+
+
+            customer.addresses.push(
+                newAddress
+            );
+
+
+            saveCustomers();
+
+
+            res.status(201).json({
+
+                success: true,
+
+                message:
+                    "✅ Delivery Address যোগ হয়েছে!",
+
+                address:
+                    newAddress
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "❌ Add Address Error:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Address যোগ করা যায়নি।"
+
+            });
+
+        }
+
+    }
+);
+
 
 // ================= PRODUCT REVIEWS =================
 
