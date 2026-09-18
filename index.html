@@ -1915,17 +1915,12 @@ loadVideos();
 
     </div>
 
-    <!-- Account -->
-    <a
-        href="#"
-        class="account-btn"
-        onclick="
-            alert('👤 Customer Account শীঘ্রই চালু হবে!');
-            return false;
-        "
-    >
-        👤 Account
-    </a>
+<a
+    href="account.html"
+    class="account-btn"
+>
+    👤 Account
+</a>
 
     <!-- Wishlist -->
     <div
@@ -2403,6 +2398,7 @@ function orderProduct(product) {
     }
 
     updateCartCount();
+    renderCart();
 
     alert("🛒 " + product.name + " কার্টে যোগ হয়েছে!");
 
@@ -2617,6 +2613,67 @@ function closeOrderForm() {
 
 }
 
+// ================= LOAD SAVED ADDRESSES =================
+
+async function loadSavedAddresses() {
+
+    const select =
+        document.getElementById(
+            "savedAddressSelect"
+        );
+
+    if (!select) return;
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/customer/addresses",
+                {
+                    credentials: "include"
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (
+            !response.ok ||
+            !data.success
+        ) {
+            return;
+        }
+
+        const addresses =
+            data.addresses || [];
+
+        addresses.forEach(address => {
+
+            const option =
+                document.createElement("option");
+
+            option.value =
+                address.address;
+
+            option.textContent =
+                `${address.label || "Address"} — ${address.address}`;
+
+            select.appendChild(option);
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Saved Address Load Error:",
+            error
+        );
+
+    }
+}
+
+loadSavedAddresses();
+
 // ================= ORDER SUBMIT =================
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -2640,8 +2697,23 @@ document.addEventListener("DOMContentLoaded", function () {
         const phone =
             document.getElementById("customerPhone").value.trim();
 
+            // ================= SAVED ADDRESS =================
+
+        const savedAddressSelect =
+            document.getElementById("savedAddressSelect");
+
+        let selectedSavedAddress = "";
+
+        if (savedAddressSelect) {
+
+             selectedSavedAddress =
+                savedAddressSelect.value.trim();
+
+        }
+
         const address =
-            document.getElementById("customerAddress").value.trim();
+          selectedSavedAddress ||
+          document.getElementById("customerAddress").value.trim();
 
         const note =
             document.getElementById("customerNote").value.trim();
@@ -3375,6 +3447,23 @@ loadProducts();
         <div class="form-group">
             <label>🏠 সম্পূর্ণ ঠিকানা</label>
 
+            <!-- ================= SAVED ADDRESSES ================= -->
+
+<div class="saved-address-box">
+
+    <label for="savedAddressSelect">
+        📍 Saved Delivery Address
+    </label>
+
+    <select id="savedAddressSelect">
+
+        <option value="">
+            -- Saved Address নির্বাচন করুন --
+        </option>
+
+    </select>
+
+</div>
             <textarea
                 id="customerAddress"
                 placeholder="বাড়ি, গ্রাম, থানা, জেলা লিখুন"
