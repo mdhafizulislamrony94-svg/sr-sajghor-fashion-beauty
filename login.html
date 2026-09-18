@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Customer Login | SR Sajghor</title>
+
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            min-height: 100vh;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 20px;
+
+            font-family:
+                "Noto Sans Bengali",
+                Arial,
+                sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #fff1f7,
+                    #f1e7ff
+                );
+
+        }
+
+
+        .login-container {
+
+            width: 100%;
+            max-width: 430px;
+
+            background: white;
+
+            padding: 35px;
+
+            border-radius: 20px;
+
+            box-shadow:
+                0 15px 40px
+                rgba(100, 40, 100, 0.15);
+
+        }
+
+
+        .logo {
+
+            text-align: center;
+
+            font-size: 28px;
+
+            font-weight: 800;
+
+            color: #d4145a;
+
+            margin-bottom: 8px;
+
+        }
+
+
+        .title {
+
+            text-align: center;
+
+            font-size: 23px;
+
+            color: #333;
+
+            margin-bottom: 8px;
+
+        }
+
+
+        .subtitle {
+
+            text-align: center;
+
+            color: #777;
+
+            font-size: 14px;
+
+            margin-bottom: 28px;
+
+        }
+
+
+        .form-group {
+
+            margin-bottom: 18px;
+
+        }
+
+
+        .form-group label {
+
+            display: block;
+
+            margin-bottom: 7px;
+
+            color: #444;
+
+            font-size: 14px;
+
+            font-weight: 700;
+
+        }
+
+
+        .form-group input {
+
+            width: 100%;
+
+            height: 48px;
+
+            padding: 0 14px;
+
+            border: 1px solid #ddd;
+
+            border-radius: 10px;
+
+            outline: none;
+
+            font-size: 15px;
+
+            transition: 0.2s;
+
+        }
+
+
+        .form-group input:focus {
+
+            border-color: #d4145a;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(212, 20, 90, 0.08);
+
+        }
+
+
+        .password-box {
+
+            position: relative;
+
+        }
+
+
+        .password-box input {
+
+            padding-right: 55px;
+
+        }
+
+
+        .show-password {
+
+            position: absolute;
+
+            right: 14px;
+
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            border: none;
+
+            background: none;
+
+            cursor: pointer;
+
+            font-size: 18px;
+
+        }
+
+
+        .login-btn {
+
+            width: 100%;
+
+            height: 50px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #d4145a,
+                    #8e2de2
+                );
+
+            color: white;
+
+            font-size: 16px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+            margin-top: 8px;
+
+            transition: 0.2s;
+
+        }
+
+
+        .login-btn:hover {
+
+            transform: translateY(-1px);
+
+            box-shadow:
+                0 7px 18px
+                rgba(142, 45, 226, 0.25);
+
+        }
+
+
+        .login-btn:disabled {
+
+            opacity: 0.6;
+
+            cursor: not-allowed;
+
+            transform: none;
+
+        }
+
+
+        .message {
+
+            display: none;
+
+            margin-top: 16px;
+
+            padding: 12px;
+
+            border-radius: 9px;
+
+            text-align: center;
+
+            font-size: 14px;
+
+        }
+
+
+        .message.show {
+
+            display: block;
+
+        }
+
+
+        .message.error {
+
+            background: #fff0f0;
+
+            color: #d00000;
+
+        }
+
+
+        .message.success {
+
+            background: #edfff3;
+
+            color: #087a32;
+
+        }
+
+
+        .signup-link {
+
+            text-align: center;
+
+            margin-top: 22px;
+
+            color: #666;
+
+            font-size: 14px;
+
+        }
+
+
+        .signup-link a {
+
+            color: #d4145a;
+
+            font-weight: 700;
+
+            text-decoration: none;
+
+        }
+
+
+        .signup-link a:hover {
+
+            text-decoration: underline;
+
+        }
+
+
+        .back-home {
+
+            display: block;
+
+            text-align: center;
+
+            margin-top: 18px;
+
+            color: #777;
+
+            text-decoration: none;
+
+            font-size: 13px;
+
+        }
+
+
+        .back-home:hover {
+
+            color: #d4145a;
+
+        }
+
+
+        @media (max-width: 500px) {
+
+            .login-container {
+
+                padding: 25px 20px;
+
+            }
+
+            .logo {
+
+                font-size: 24px;
+
+            }
+
+            .title {
+
+                font-size: 20px;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <div class="login-container">
+
+
+        <div class="logo">
+            🌸 SR সাজঘর
+        </div>
+
+
+        <div class="title">
+            Customer Login
+        </div>
+
+
+        <div class="subtitle">
+            আপনার Account-এ Login করুন
+        </div>
+
+
+        <form id="loginForm">
+
+
+            <div class="form-group">
+
+                <label for="loginEmail">
+                    📧 Email অথবা Mobile Number
+                </label>
+
+                <input
+                    type="text"
+                    id="loginEmail"
+                    placeholder="Email বা 01XXXXXXXXX"
+                    autocomplete="username"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="loginPassword">
+                    🔐 Password
+                </label>
+
+
+                <div class="password-box">
+
+                    <input
+                        type="password"
+                        id="loginPassword"
+                        placeholder="আপনার Password দিন"
+                        autocomplete="current-password"
+                        required
+                    >
+
+
+                    <button
+                        type="button"
+                        class="show-password"
+                        id="showPasswordBtn"
+                    >
+                        👁️
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="login-btn"
+                id="loginBtn"
+            >
+                🔐 Login
+            </button>
+
+
+            <div
+                id="message"
+                class="message"
+            ></div>
+
+
+        </form>
+
+
+        <div class="signup-link">
+
+            Account নেই?
+
+            <a href="signup.html">
+                Create Account
+            </a>
+
+        </div>
+
+
+        <a
+            href="index.html"
+            class="back-home"
+        >
+            ← Home Page-এ ফিরে যান
+        </a>
+
+
+    </div>
+
+
+    <script>
+
+
+        // ================= SHOW PASSWORD =================
+
+        document
+            .getElementById("showPasswordBtn")
+            .addEventListener(
+                "click",
+                function() {
+
+                    const passwordInput =
+                        document.getElementById(
+                            "loginPassword"
+                        );
+
+
+                    if (
+                        passwordInput.type ===
+                        "password"
+                    ) {
+
+                        passwordInput.type =
+                            "text";
+
+                        this.textContent =
+                            "🙈";
+
+                    } else {
+
+                        passwordInput.type =
+                            "password";
+
+                        this.textContent =
+                            "👁️";
+
+                    }
+
+                }
+            );
+
+
+        // ================= LOGIN FORM =================
+
+        document
+            .getElementById("loginForm")
+            .addEventListener(
+                "submit",
+                async function(event) {
+
+                    event.preventDefault();
+
+
+                    const login =
+                        document
+                            .getElementById(
+                                "loginEmail"
+                            )
+                            .value
+                            .trim();
+
+
+                    const password =
+                        document
+                            .getElementById(
+                                "loginPassword"
+                            )
+                            .value;
+
+
+                    const message =
+                        document
+                            .getElementById(
+                                "message"
+                            );
+
+
+                    const loginBtn =
+                        document
+                            .getElementById(
+                                "loginBtn"
+                            );
+
+
+                    message.className =
+                        "message";
+
+
+                    // ================= CHECK =================
+
+                    if (
+                        !login ||
+                        !password
+                    ) {
+
+                        message.textContent =
+                            "❌ Email/Mobile এবং Password দিন।";
+
+                        message.classList.add(
+                            "show",
+                            "error"
+                        );
+
+                        return;
+
+                    }
+
+
+                    try {
+
+
+                        loginBtn.disabled =
+                            true;
+
+                        loginBtn.textContent =
+                            "⏳ Login হচ্ছে...";
+
+
+                        message.textContent =
+                            "";
+
+
+                        const response =
+                            await fetch(
+                                "/api/customer/login",
+                                {
+
+                                    method:
+                                        "POST",
+
+                                    headers: {
+
+                                        "Content-Type":
+                                            "application/json"
+
+                                    },
+
+                                    credentials:
+                                        "include",
+
+                                    body:
+                                        JSON.stringify({
+
+                                            login:
+                                                login,
+
+                                            password:
+                                                password
+
+                                        })
+
+                                }
+                            );
+
+
+                        const data =
+                            await response.json();
+
+
+                        // ================= SUCCESS =================
+
+                        if (
+                            response.ok &&
+                            data.success
+                        ) {
+
+
+                            message.className =
+                                "message show success";
+
+
+                            message.textContent =
+                                "✅ Login সফল হয়েছে!";
+
+
+                            console.log(
+                                "Customer Login:",
+                                data.customer
+                            );
+
+
+                            setTimeout(
+                                function() {
+
+                                    window.location.href =
+                                        "account.html";
+
+                                },
+                                1000
+                            );
+
+
+                            return;
+
+                        }
+
+
+                        // ================= ERROR =================
+
+                        message.className =
+                            "message show error";
+
+
+                        message.textContent =
+                            "❌ " +
+                            (
+                                data.message ||
+                                "Login করা যায়নি।"
+                            );
+
+
+                    } catch (error) {
+
+
+                        console.error(
+                            "Login Error:",
+                            error
+                        );
+
+
+                        message.className =
+                            "message show error";
+
+
+                        message.textContent =
+                            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না.";
+
+
+                    } finally {
+
+
+                        loginBtn.disabled =
+                            false;
+
+                        loginBtn.textContent =
+                            "🔐 Login";
+
+                    }
+
+                }
+            );
+
+
+    </script>
+
+
+</body>
+
+</html>
