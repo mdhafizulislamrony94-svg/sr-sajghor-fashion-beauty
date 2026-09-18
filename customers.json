@@ -1,0 +1,46 @@
+[
+  {
+    "customerId": "CUS1789583007817",
+    "name": "md Raku",
+    "phone": "01451425784",
+    "email": "sffgdfgdfdffd@gmail.com",
+    "passwordHash": "769cbdfbd38420d6cd744e115e50463593230d1c7c5cc6db3d718c000d898a6c5f43301d00ab1b03c575aee42a96f1c99d439460acde1df8a42eded5b6413bfb",
+    "passwordSalt": "f18a69b40ca603d21d6db42c88c7b3f0",
+    "createdAt": "2026-09-16T18:23:27.817Z"
+  },
+  {
+    "customerId": "CUS1789583053980",
+    "name": "md Raku",
+    "phone": "01451425787",
+    "email": "sffgdfgdfdjgt@gmail.com",
+    "passwordHash": "4bb39f85e6865f9c7d369f7b639556242cbb0eca8a09e5172827855f13ecaf9876c6db93d6cccb6fe1f63ec595a3685886c66cd3fd68bbcc97866f90a1529c59",
+    "passwordSalt": "a2adae2f7e0d6ec8679c5d493da3c2ef",
+    "createdAt": "2026-09-16T18:24:13.980Z"
+  },
+  {
+    "customerId": "CUS1789583395091",
+    "name": "md Rakib",
+    "phone": "01451425788",
+    "email": "asdfsdfasdff@gmail.com",
+    "passwordHash": "3be1d6bf7467f2b9828d0c05d1d37d4f499b528be1c1e4a3f24824f07e4707aa6b569227741b2ab28949a33e94b413eb28e204ed1dbdd70bf3f7e3d1c91ef57d",
+    "passwordSalt": "09b0b5c7af1d427f97af3dc4c7900574",
+    "createdAt": "2026-09-16T18:29:55.091Z"
+  },
+  {
+    "customerId": "CUS1789583764753",
+    "name": "Md Abir Ahamed",
+    "phone": "01354784587",
+    "email": "abirahmed@gmail.com",
+    "passwordHash": "43ddc34d3ae5b42d8b517c7f5bdf1e38076869aeb241c7198c98c31ca61d6dcc26c949bc5656c9229b2fe7b85b34b5e33e8d8b81b2ea2b81fab7be40fd7a62d3",
+    "passwordSalt": "bd9fe71792420f4dd44eab3fab24cb18",
+    "createdAt": "2026-09-16T18:36:04.753Z",
+    "addresses": [
+      {
+        "id": "ADDR1789593848661",
+        "label": "Nalta ,Klingonjes,Shatkhira",
+        "address": "Satkhira",
+        "createdAt": "2026-09-16T21:24:08.661Z"
+      }
+    ]
+  }
+]
