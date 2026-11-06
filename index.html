@@ -6,6 +6,7 @@
 
     <title>SR Sajghor | Fashion & Beauty</title>
 
+    
     <style>
         * {
             margin: 0;
@@ -446,17 +447,17 @@
         }
 
         .product-image img {
-            width: 100%;
-            height: 100%;
-
-            object-fit: cover;
-
-            transition: 0.5s;
+             width: 100%;
+             height: 100%;
+             object-fit: contain;
+             object-position: center;
+             display: block;
+             transition: none;
         }
 
-        .product:hover .product-image img {
-            transform: scale(1.06);
-        }
+         .product:hover .product-image img {
+          transform: none;
+       }
 
         .no-image {
             font-size: 65px;
@@ -1073,7 +1074,9 @@
 .product-modal-image img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+    object-position: center;
+    display: block;
 }
 
 .product-modal-image .no-image {
@@ -1779,6 +1782,50 @@
     }
 }
 
+.special-offer {
+    margin: 25px 6%;
+    padding: 28px 20px;
+    border-radius: 22px;
+    text-align: center;
+    background: linear-gradient(135deg, #ff4d8d, #8e2de2);
+    color: white;
+    box-shadow: 0 10px 30px rgba(142, 45, 226, 0.25);
+}
+
+.offer-badge {
+    display: inline-block;
+    padding: 7px 14px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.2);
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.special-offer h2 {
+    margin: 8px 0;
+    font-size: 28px;
+}
+
+.special-offer p {
+    margin: 8px 0 18px;
+    font-size: 16px;
+}
+
+.special-offer button {
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    background: white;
+    color: #d4145a;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.special-offer button:hover {
+    transform: scale(1.05);
+}
+
     </style>
 </head>
 
@@ -1942,6 +1989,22 @@ loadVideos();
 
 </header>
 
+<!-- SPECIAL OFFER BANNER -->
+<section class="special-offer">
+    <div class="offer-content">
+        <span class="offer-badge">🔥 SPECIAL OFFER</span>
+
+        <h2>আজকের বিশেষ অফার!</h2>
+
+        <p>
+            নির্বাচিত পণ্যে থাকছে আকর্ষণীয় ছাড় 🎁
+        </p>
+
+        <button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">
+            🛍️ এখনই দেখুন
+        </button>
+    </div>
+</section>
 
 <!-- ================= HERO ================= -->
 
@@ -2613,6 +2676,54 @@ function closeOrderForm() {
 
 }
 
+
+// ================= DELETE SAVED ADDRESS =================
+
+async function deleteSavedAddress(addressId) {
+
+    if (!confirm("এই Saved Address টি Delete করতে চান?")) {
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            "/api/customer/addresses/" + addressId,
+            {
+                method: "DELETE",
+                credentials: "include"
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+
+            alert(
+                data.message ||
+                "Address Delete করা যায়নি।"
+            );
+
+            return;
+        }
+
+        alert("✅ Address Delete হয়েছে!");
+
+        await loadSavedAddresses();
+
+    } catch (error) {
+
+        console.error(
+            "Delete Address Error:",
+            error
+        );
+
+        alert(
+            "Server-এর সাথে যোগাযোগ করা যাচ্ছে না।"
+        );
+    }
+}
+
 // ================= LOAD SAVED ADDRESSES =================
 
 async function loadSavedAddresses() {
@@ -2620,6 +2731,11 @@ async function loadSavedAddresses() {
     const select =
         document.getElementById(
             "savedAddressSelect"
+        );
+
+    const list =
+        document.getElementById(
+            "savedAddressList"
         );
 
     if (!select) return;
@@ -2647,7 +2763,21 @@ async function loadSavedAddresses() {
         const addresses =
             data.addresses || [];
 
+        // Dropdown খালি করে নতুন করে Load
+        select.innerHTML = `
+            <option value="">
+                -- Saved Address নির্বাচন করুন --
+            </option>
+        `;
+
+        // Delete List খালি করা
+        if (list) {
+            list.innerHTML = "";
+        }
+
         addresses.forEach(address => {
+
+            // ================= DROPDOWN =================
 
             const option =
                 document.createElement("option");
@@ -2659,6 +2789,61 @@ async function loadSavedAddresses() {
                 `${address.label || "Address"} — ${address.address}`;
 
             select.appendChild(option);
+
+
+            // ================= DELETE LIST =================
+
+            if (list) {
+
+                const item =
+                    document.createElement("div");
+
+                item.style.cssText = `
+                    display:flex;
+                    align-items:center;
+                    justify-content:space-between;
+                    gap:10px;
+                    margin-top:8px;
+                    padding:10px;
+                    background:#fff;
+                    border:1px solid #f0d8e8;
+                    border-radius:10px;
+                `;
+
+                item.innerHTML = `
+                    <div style="flex:1;">
+                        <strong>
+                            ${address.label || "Address"}
+                        </strong>
+
+                        <div style="
+                            margin-top:4px;
+                            color:#555;
+                            font-size:14px;
+                        ">
+                            ${address.address}
+                        </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        onclick="deleteSavedAddress(${address.id})"
+                        style="
+                            border:none;
+                            background:#dc3545;
+                            color:white;
+                            padding:8px 12px;
+                            border-radius:8px;
+                            cursor:pointer;
+                            font-weight:bold;
+                        "
+                    >
+                        🗑️ Delete
+                    </button>
+                `;
+
+                list.appendChild(item);
+            }
 
         });
 
@@ -2673,6 +2858,104 @@ async function loadSavedAddresses() {
 }
 
 loadSavedAddresses();
+
+
+// ================= SAVE CUSTOMER ADDRESS =================
+
+async function saveCustomerAddress() {
+
+    const label =
+        document.getElementById(
+            "savedAddressLabel"
+        ).value.trim();
+
+    const address =
+        document.getElementById(
+            "savedAddressText"
+        ).value.trim();
+
+    if (!address) {
+
+        alert(
+            "দয়া করে Address লিখুন।"
+        );
+
+        return;
+    }
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/customer/addresses",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    credentials: "include",
+
+                    body: JSON.stringify({
+                        label:
+                            label || "বাসা",
+
+                        address:
+                            address
+                    })
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (
+            !response.ok ||
+            !data.success
+        ) {
+
+            alert(
+                data.message ||
+                "Address Save করা যায়নি।"
+            );
+
+            return;
+        }
+
+        alert(
+            "✅ Address সফলভাবে Save হয়েছে!"
+        );
+
+
+        // Input খালি করা
+
+        document.getElementById(
+            "savedAddressLabel"
+        ).value = "";
+
+        document.getElementById(
+            "savedAddressText"
+        ).value = "";
+
+
+        // Saved Address আবার Load
+
+        await loadSavedAddresses();
+
+    } catch (error) {
+
+        console.error(
+            "Save Address Error:",
+            error
+        );
+
+        alert(
+            "Server-এর সাথে যোগাযোগ করা যাচ্ছে না।"
+        );
+    }
+}
 
 // ================= ORDER SUBMIT =================
 
@@ -3462,6 +3745,67 @@ loadProducts();
         </option>
 
     </select>
+
+    <div
+         id="savedAddressList"
+         style="margin-top:10px;"
+    ></div>
+
+    <div style="
+    margin-top:10px;
+    padding:12px;
+    background:#fff8fc;
+    border:1px solid #f3d8e9;
+    border-radius:10px;
+">
+
+    <input
+        type="text"
+        id="savedAddressLabel"
+        placeholder="ঠিকানার নাম (যেমন: বাসা)"
+        style="
+            width:100%;
+            padding:10px;
+            margin-bottom:8px;
+            border:1px solid #ddd;
+            border-radius:8px;
+            box-sizing:border-box;
+        "
+    >
+
+    <textarea
+        id="savedAddressText"
+        placeholder="যে ঠিকানাটি Save করতে চান লিখুন"
+        style="
+            width:100%;
+            min-height:70px;
+            padding:10px;
+            border:1px solid #ddd;
+            border-radius:8px;
+            box-sizing:border-box;
+            resize:vertical;
+        "
+    ></textarea>
+
+    <button
+        type="button"
+        onclick="saveCustomerAddress()"
+        style="
+            width:100%;
+            margin-top:8px;
+            padding:11px;
+            border:none;
+            border-radius:8px;
+            background:linear-gradient(135deg,#d4145a,#8e2de2);
+            color:white;
+            font-weight:bold;
+            cursor:pointer;
+        "
+    >
+        💾 Address Save করুন
+    </button>
+
+</div>
 
 </div>
             <textarea
