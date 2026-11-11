@@ -49,8 +49,8 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ================= ADMIN LOGIN SESSION =================
 
-const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "SRadmin123!";
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 const adminSessions = new Set();
 
