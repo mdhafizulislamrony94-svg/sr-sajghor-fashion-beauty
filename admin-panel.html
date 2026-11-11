@@ -95,6 +95,19 @@
             font-size: 15px;
         }
 
+        .product-form input[type="file"] {
+            display: block;
+            width: 100%;
+            min-height: 48px;
+            padding: 12px;
+            background: #fff0f6;
+            border: 2px dashed #d4145a;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #333;
+            box-sizing: border-box;
+        }
+
         .product-form textarea {
             min-height: 90px;
             resize: vertical;
@@ -287,6 +300,31 @@
             header {
                 flex-direction: column;
                 gap: 10px;
+        
+            .amount-summary {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 15px;
+                padding: 12px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                background: #faf5ff;
+                font-size: 15px;
+            }
+
+            .amount-summary strong {
+                color: #8e2de2;
+                white-space: nowrap;
+            }
+
+            @media print {
+                #receiptLanguage,
+                label[for="receiptLanguage"] {
+                    display: none !important;
+                }
+            }
+
             }
         }
     </style>
@@ -399,62 +437,63 @@
             >
 
             <input
-                type="text"
-                id="productCategory"
-                placeholder="Category"
-                required
+                 type="text"
+                 id="productCategory"
+                 placeholder="Category"
+                 required
             >
+        
+<textarea
+    id="productDescription"
+    class="full"
+    placeholder="Product Description"
+></textarea>
 
-            <textarea
-                id="productDescription"
-                class="full"
-                placeholder="Product Description"
-            ></textarea>
+<input
+    type="file"
+    id="productImageFile"
+    class="full"
+    accept="image/jpeg,image/jpg,image/png,image/webp"
+    multiple
+>
 
-            <input
-                type="file"
-                id="productImageFile"
-                class="full"
-                accept="image/jpeg,image/jpg,image/png,image/webp"
-            >
+<small class="full">
+    📸 সর্বোচ্চ ১০টি ছবি নির্বাচন করুন।
+    প্রথম ছবিটি Product Card-এ দেখাবে।
+</small>
 
-            <button
-                type="submit"
-                id="saveProductBtn"
-                class="add-btn"
-            >
-                ➕ Add Product
-            </button>
+<button
+    type="submit"
+    id="saveProductBtn"
+    class="add-btn"
+>
+    ➕ Add Product
+</button>
 
-            <button
-                type="button"
-                id="cancelEditBtn"
-                class="cancel-btn"
-                onclick="cancelEdit()"
-            >
-                ❌ Cancel Edit
-            </button>
+<button
+    type="button"
+    id="cancelEditBtn"
+    class="cancel-btn"
+    onclick="cancelEdit()"
+>
+    ❌ Cancel Edit
+</button>
 
-        </form>
+</form>
 
+</div>
+
+<!-- ================= PRODUCT LIST ================= -->
+
+<div class="section">
+
+    <h2>📦 সকল Product</h2>
+
+    <div id="productsContainer" class="products">
+        <div class="empty">Product লোড হচ্ছে...</div>
     </div>
 
-
-    <!-- ================= PRODUCT LIST ================= -->
-
-    <div class="section">
-
-        <h2>📋 Product List</h2>
-
-        <div id="productsContainer" class="products">
-
-            <div class="empty">
-                Product লোড হচ্ছে...
-            </div>
-
-        </div>
-
-    </div>
+</div>
 
 
     <!-- ================= ORDERS ================= -->
@@ -594,23 +633,29 @@ products.forEach(product => {
 
     let imageHTML = "";
 
-    if (product.image) {
 
-        imageHTML = `
-            <img
-                src="${product.image}"
-                alt="${product.name}"
-                style="
-                    width:100%;
-                    height:220px;
-                    object-fit:cover;
-                    border-radius:8px;
-                    margin-bottom:12px;
-                "
-            >
-        `;
+        const firstImage =
+            Array.isArray(product.images) && product.images.length > 0
+                ? product.images[0]
+                : product.image;
 
-    }
+        if (firstImage) {
+
+            imageHTML = `
+                <img
+                    src="${firstImage}"
+                    alt="${product.name}"
+                    style="
+                        width:100%;
+                        height:220px;
+                        object-fit:contain;
+                        border-radius:8px;
+                        margin-bottom:12px;
+                    "
+                >
+            `;
+
+        }
 
 
     div.innerHTML = `
@@ -685,61 +730,51 @@ document.getElementById(
 
         try {
 
-            let imageUrl = "";
 
-            // ================= IMAGE =================
+                let imageUrls = [];
 
-            const imageFile =
-                document.getElementById(
-                    "productImageFile"
-                ).files[0];
+                // ================= GET SELECTED IMAGES =================
 
-
-            // Edit করার সময় নতুন ছবি না দিলে
-            // পুরোনো ছবি রাখা হবে
-
-            if (
-                editingProductId !== null &&
-                !imageFile
-            ) {
-
-                const productsResponse =
-                    await fetch("/api/products");
-
-                const productsData =
-                    await productsResponse.json();
-
-                const oldProduct =
-    productsData.products.find(
-        item =>
-            String(item.id) ===
-            String(editingProductId)
-    );
-                if (oldProduct) {
-
-                    imageUrl =
-                        oldProduct.image || "";
-
-                }
-
-            }
-
-
-            // ================= UPLOAD NEW IMAGE =================
-
-            if (imageFile) {
-
-                const formData =
-                    new FormData();
-
-                formData.append(
-                    "image",
-                    imageFile
+                const imageFiles = Array.from(
+                    document.getElementById("productImageFile").files
                 );
 
+                if (imageFiles.length > 10) {
+                    alert("❌ সর্বোচ্চ ১০টি ছবি নির্বাচন করতে পারবেন।");
+                    return;
+                }
 
-                const uploadResponse =
-                    await fetch(
+                // ================= KEEP OLD IMAGES =================
+
+                if (editingProductId !== null) {
+
+                    const productsResponse = await fetch("/api/products");
+                    const productsData = await productsResponse.json();
+
+                    const oldProduct = productsData.products.find(
+                        item =>
+                            String(item.id) === String(editingProductId)
+                    );
+
+                    if (oldProduct) {
+                        imageUrls = Array.isArray(oldProduct.images)
+                            && oldProduct.images.length > 0
+                            ? [...oldProduct.images]
+                            : (oldProduct.image ? [oldProduct.image] : []);
+                    }
+                }
+
+                // ================= UPLOAD NEW IMAGES =================
+
+                if (imageFiles.length > 0) {
+
+                    const formData = new FormData();
+
+                    imageFiles.forEach(file => {
+                        formData.append("images", file);
+                    });
+
+                    const uploadResponse = await fetch(
                         "/api/products/upload-image",
                         {
                             method: "POST",
@@ -747,27 +782,16 @@ document.getElementById(
                         }
                     );
 
+                    const uploadData = await uploadResponse.json();
 
-                const uploadData =
-                    await uploadResponse.json();
+                    if (!uploadData.success) {
+                        alert("❌ " + uploadData.message);
+                        return;
+                    }
 
-
-                if (!uploadData.success) {
-
-                    alert(
-                        "❌ " +
-                        uploadData.message
-                    );
-
-                    return;
+                    // নতুন ছবি দিলে পুরোনো ছবির জায়গায় নতুন ছবি রাখা হবে
+                    imageUrls = uploadData.images;
                 }
-
-
-                imageUrl =
-                    uploadData.image;
-
-            }
-
 
             // ================= PRODUCT DATA =================
 
@@ -802,8 +826,10 @@ document.getElementById(
                         "productDescription"
                     ).value,
 
-                image:
-                    imageUrl
+                
+                images: imageUrls,
+                image: imageUrls[0] || ""
+
 
             };
 
@@ -974,7 +1000,14 @@ async function editProduct(id) {
         ).value =
             product.description;
 
-            
+           
+        const oldImages = Array.isArray(product.images)
+            && product.images.length > 0
+            ? product.images
+            : (product.image ? [product.image] : []);
+
+        console.log("বর্তমান Product Images:", oldImages);
+        
         editingProductId =
             id;
 
@@ -1291,8 +1324,55 @@ async function loadOrders() {
                         ${order.note || "নেই"}
                     </p>
 
+                    <p>
+                        💳 <strong>পেমেন্ট পদ্ধতি:</strong>
+                        ${getPaymentMethodName(order.paymentMethod)}
+                    </p>
+
+                    <p>
+                        📱 <strong>পেমেন্ট নম্বর:</strong>
+                        ${order.paymentSenderPhone || "প্রযোজ্য নয়"}
+                    </p>
+
+                    <p>
+                        🧾 <strong>Transaction ID:</strong>
+                        ${order.transactionId || "প্রযোজ্য নয়"}
+                    </p>
+
+                    <p>
+                        🔍 <strong>পেমেন্টের অবস্থা:</strong>
+                        ${
+                            order.paymentStatus === "pending_verification"
+                                ? "⏳ যাচাই বাকি"
+                                : order.paymentStatus === "due_on_delivery"
+                                    ? "🚚 ডেলিভারির সময় পরিশোধ"
+                                    : order.paymentStatus === "verified"
+                                        ? "✅ পেমেন্ট যাচাই হয়েছে"
+                                        : "তথ্য পাওয়া যায়নি"
+                        }
+                    </p>
+
 
                     <div class="actions">
+
+                        ${
+                            order.paymentMethod !== "cod" &&
+                            order.paymentStatus !== "verified"
+                                ? `
+                                    <button
+                                        class="confirm"
+                                        onclick="verifyPayment('${order.orderId}')">
+                                        💳 পেমেন্ট যাচাই করুন
+                                    </button>
+                                `
+                                : order.paymentStatus === "verified"
+                                    ? `
+                                        <button disabled>
+                                            ✅ পেমেন্ট যাচাই হয়েছে
+                                        </button>
+                                    `
+                                    : ""
+                        }
 
                         <button
                             onclick="callCustomer('${order.phone}')">
@@ -1376,6 +1456,21 @@ async function loadOrders() {
 
     }
 
+}
+
+
+// ================= PAYMENT METHOD NAME =================
+
+function getPaymentMethodName(method) {
+
+    const methods = {
+        bkash: "বিকাশ (bKash)",
+        nagad: "নগদ (Nagad)",
+        rocket: "রকেট (Rocket)",
+        cod: "ক্যাশ অন ডেলিভারি (COD)"
+    };
+
+    return methods[method] || "তথ্য পাওয়া যায়নি";
 }
 
 
@@ -1466,6 +1561,49 @@ async function updateStatus(
 
 }
 
+// ================= VERIFY PAYMENT =================
+
+async function verifyPayment(orderId) {
+
+    const confirmVerify = confirm(
+        "আপনি কি নিশ্চিত যে এই অর্ডারের টাকা আপনার অ্যাকাউন্টে পেয়েছেন এবং Transaction ID মিলিয়েছেন?"
+    );
+
+    if (!confirmVerify) {
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            `/api/orders/${orderId}/payment`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.message || "পেমেন্ট যাচাই করা যায়নি।");
+            return;
+        }
+
+        alert("✅ পেমেন্ট যাচাই সফল হয়েছে।");
+
+        loadOrders();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("সার্ভারের সাথে যোগাযোগ করা যায়নি।");
+
+    }
+}
 
 // ================= DELETE ORDER =================
 
@@ -1778,6 +1916,226 @@ function copyOrderId(orderId) {
             alert("❌ Order ID Copy করা যায়নি।");
         });
 }
+function getReceiptPaymentMethod(method) {
+
+    const methods = {
+        bkash: "বিকাশ (bKash)",
+        nagad: "নগদ (Nagad)",
+        rocket: "রকেট (Rocket)",
+        cod: "ক্যাশ অন ডেলিভারি (COD)"
+    };
+
+    return methods[method] || "তথ্য পাওয়া যায়নি";
+} 
+
+// ================= RECEIPT LANGUAGES =================
+
+const receiptLanguages = [
+    { code: "bn", name: "বাংলা" },
+    { code: "en", name: "English" },
+    { code: "ar", name: "العربية (Arabic)" },
+    { code: "hi", name: "हिन्दी (Hindi)" },
+
+];
+
+// ================= AMOUNT IN WORDS =================
+
+function numberToWordsEnglish(num) {
+
+    if (num === 0) return "Zero";
+
+    const ones = [
+        "", "One", "Two", "Three", "Four",
+        "Five", "Six", "Seven", "Eight", "Nine",
+        "Ten", "Eleven", "Twelve", "Thirteen",
+        "Fourteen", "Fifteen", "Sixteen",
+        "Seventeen", "Eighteen", "Nineteen"
+    ];
+
+    const tens = [
+        "", "", "Twenty", "Thirty", "Forty",
+        "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"
+    ];
+
+    function convert(n) {
+        if (n < 20) return ones[n];
+
+        if (n < 100) {
+            return tens[Math.floor(n / 10)] +
+                (n % 10 ? " " + ones[n % 10] : "");
+        }
+
+        if (n < 1000) {
+            return ones[Math.floor(n / 100)] +
+                " Hundred" +
+                (n % 100 ? " " + convert(n % 100) : "");
+        }
+
+        if (n < 100000) {
+            return convert(Math.floor(n / 1000)) +
+                " Thousand" +
+                (n % 1000 ? " " + convert(n % 1000) : "");
+        }
+
+        if (n <= 1000000) {
+            return convert(Math.floor(n / 100000)) +
+                " Lakh" +
+                (n % 100000 ? " " + convert(n % 100000) : "");
+        }
+
+        return "";
+    }
+
+    return convert(num) + " Taka Only";
+}
+
+// ================= HINDI AMOUNT IN WORDS =================
+
+function numberToWordsHindi(num) {
+
+    const words = [
+        "शून्य", "एक", "दो", "तीन", "चार",
+        "पाँच", "छह", "सात", "आठ", "नौ",
+        "दस", "ग्यारह", "बारह", "तेरह", "चौदह",
+        "पंद्रह", "सोलह", "सत्रह", "अठारह", "उन्नीस",
+        "बीस", "इक्कीस", "बाईस", "तेईस", "चौबीस",
+        "पच्चीस", "छब्बीस", "सत्ताईस", "अट्ठाईस", "उनतीस",
+        "तीस", "इकतीस", "बत्तीस", "तैंतीस", "चौंतीस",
+        "पैंतीस", "छत्तीस", "सैंतीस", "अड़तीस", "उनतालीस",
+        "चालीस", "इकतालीस", "बयालीस", "तैंतालीस", "चौवालीस",
+        "पैंतालीस", "छियालीस", "सैंतालीस", "अड़तालीस", "उनचास",
+        "पचास", "इक्यावन", "बावन", "तिरपन", "चौवन",
+        "पचपन", "छप्पन", "सत्तावन", "अट्ठावन", "उनसठ",
+        "साठ", "इकसठ", "बासठ", "तिरसठ", "चौंसठ",
+        "पैंसठ", "छियासठ", "सड़सठ", "अड़सठ", "उनहत्तर",
+        "सत्तर", "इकहत्तर", "बहत्तर", "तिहत्तर", "चौहत्तर",
+        "पचहत्तर", "छिहत्तर", "सतहत्तर", "अठहत्तर", "उनासी",
+        "अस्सी", "इक्यासी", "बयासी", "तिरासी", "चौरासी",
+        "पचासी", "छियासी", "सत्तासी", "अट्ठासी", "नवासी",
+        "नब्बे", "इक्यानवे", "बानवे", "तिरानवे", "चौरानवे",
+        "पचानवे", "छियानवे", "सत्तानवे", "अट्ठानवे", "निन्यानवे"
+    ];
+
+    function convert(n) {
+
+        if (n < 100) return words[n];
+
+        if (n < 1000) {
+            return words[Math.floor(n / 100)] + " सौ" +
+                (n % 100 ? " " + convert(n % 100) : "");
+        }
+
+        if (n < 100000) {
+            return convert(Math.floor(n / 1000)) + " हज़ार" +
+                (n % 1000 ? " " + convert(n % 1000) : "");
+        }
+
+        if (n <= 1000000) {
+            return convert(Math.floor(n / 100000)) + " लाख" +
+                (n % 100000 ? " " + convert(n % 100000) : "");
+        }
+
+        return "";
+    }
+
+    return convert(num) + " टका मात्र";
+}
+
+// ================= BANGLA AMOUNT IN WORDS =================
+
+function numberToWordsBangla(num) {
+
+    const ones = [
+        "শূন্য", "এক", "দুই", "তিন", "চার",
+        "পাঁচ", "ছয়", "সাত", "আট", "নয়",
+        "দশ", "এগারো", "বারো", "তেরো", "চৌদ্দ",
+        "পনেরো", "ষোলো", "সতেরো", "আঠারো", "উনিশ"
+    ];
+
+    const tens = [
+        "", "", "বিশ", "ত্রিশ", "চল্লিশ",
+        "পঞ্চাশ", "ষাট", "সত্তর", "আশি", "নব্বই"
+    ];
+
+    function convert(n) {
+
+        if (n < 20) return ones[n];
+
+        if (n < 100) {
+            return tens[Math.floor(n / 10)] +
+                (n % 10 ? " " + ones[n % 10] : "");
+        }
+
+        if (n < 1000) {
+            return ones[Math.floor(n / 100)] + " শত" +
+                (n % 100 ? " " + convert(n % 100) : "");
+        }
+
+        if (n < 100000) {
+            return convert(Math.floor(n / 1000)) + " হাজার" +
+                (n % 1000 ? " " + convert(n % 1000) : "");
+        }
+
+        if (n <= 1000000) {
+            return convert(Math.floor(n / 100000)) + " লাখ" +
+                (n % 100000 ? " " + convert(n % 100000) : "");
+        }
+
+        return "";
+    }
+
+    return convert(num) + " টাকা মাত্র";
+}
+
+// ================= ARABIC AMOUNT IN WORDS =================
+
+function numberToWordsArabic(num) {
+
+    const ones = [
+        "صفر", "واحد", "اثنان", "ثلاثة", "أربعة",
+        "خمسة", "ستة", "سبعة", "ثمانية", "تسعة",
+        "عشرة", "أحد عشر", "اثنا عشر", "ثلاثة عشر",
+        "أربعة عشر", "خمسة عشر", "ستة عشر",
+        "سبعة عشر", "ثمانية عشر", "تسعة عشر"
+    ];
+
+    const tens = [
+        "", "", "عشرون", "ثلاثون", "أربعون",
+        "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"
+    ];
+
+    const hundreds = [
+        "", "مائة", "مائتان", "ثلاثمائة",
+        "أربعمائة", "خمسمائة", "ستمائة",
+        "سبعمائة", "ثمانمائة", "تسعمائة"
+    ];
+
+    function convert(n) {
+
+        if (n < 20) return ones[n];
+
+        if (n < 100) {
+            return (n % 10
+                ? ones[n % 10] + " و"
+                : "") + tens[Math.floor(n / 10)];
+        }
+
+        if (n < 1000) {
+            return hundreds[Math.floor(n / 100)] +
+                (n % 100 ? " و" + convert(n % 100) : "");
+        }
+
+        if (n < 1000000) {
+            return convert(Math.floor(n / 1000)) +
+                " ألف" +
+                (n % 1000 ? " و" + convert(n % 1000) : "");
+        }
+
+        return "";
+    }
+
+    return convert(num) + " تاكا فقط";
+}
 
 function printOrder(orderId) {
 
@@ -1819,7 +2177,13 @@ function printOrder(orderId) {
         `;
     }).join("");
 
-    const total = Number(orderData.total) || 0;
+        const total = Number(orderData.total) || 0;
+
+        const languageOptions = receiptLanguages.map(lang => `
+        <option value="${lang.code}">
+            ${lang.name}
+        </option>
+    `).join("");
 
     const printWindow = window.open(
         "",
@@ -1989,7 +2353,34 @@ function printOrder(orderId) {
 
                     <strong>📝 নোট:</strong>
                     ${orderData.note || "নেই"}
+                    
+                    <br>
 
+                    <strong>💳 পেমেন্ট পদ্ধতি:</strong>
+                    ${getReceiptPaymentMethod(orderData.paymentMethod)}
+
+                    <br>
+
+                    <strong>📱 পেমেন্ট নম্বর:</strong>
+                    ${orderData.paymentSenderPhone || "প্রযোজ্য নয়"}
+
+                    <br>
+
+                    <strong>🧾 Transaction ID:</strong>
+                    ${orderData.transactionId || "প্রযোজ্য নয়"}
+
+                    <br>
+
+                    <strong>🔍 পেমেন্টের অবস্থা:</strong>
+                    ${
+                        orderData.paymentStatus === "pending_verification"
+                            ? "যাচাই বাকি"
+                            : orderData.paymentStatus === "due_on_delivery"
+                                ? "ডেলিভারির সময় পরিশোধ"
+                                : orderData.paymentStatus === "verified"
+                                    ? "পেমেন্ট যাচাই হয়েছে"
+                                    : "তথ্য পাওয়া যায়নি"
+                    }
                 </div>
 
                 <h3>🛍️ পণ্যসমূহ</h3>
@@ -1999,8 +2390,29 @@ function printOrder(orderId) {
                 </div>
 
                 <div class="total">
-                    মোট:
-                    ৳ ${total.toLocaleString("en-BD")}
+
+                    <div class="amount-summary">
+
+                        <span id="amountInWords">
+                            Two Hundred Taka Only
+                        </span>
+
+                        <strong>
+                            Total: ৳ ${total.toLocaleString("en-BD")}
+                        </strong>
+
+                    </div>
+
+                    <br>
+
+                    <label for="receiptLanguage">
+                        Select Language:
+                    </label>
+
+                    <select id="receiptLanguage">
+                        ${languageOptions}
+                    </select>
+
                 </div>
 
                 <div class="thanks">
@@ -2025,6 +2437,43 @@ function printOrder(orderId) {
         </body>
         </html>
     `);
+
+    // ================= RECEIPT LANGUAGE CHANGE =================
+
+const receiptLanguageSelect =
+    printWindow.document.getElementById("receiptLanguage");
+
+const amountInWordsElement =
+    printWindow.document.getElementById("amountInWords");
+
+function updateAmountInWords() {
+
+    const selectedLanguage = receiptLanguageSelect.value;
+
+    let words = "";
+
+    if (selectedLanguage === "en") {
+        words = numberToWordsEnglish(total);
+    }
+
+    else if (selectedLanguage === "bn") {
+        words = numberToWordsBangla(total);
+     }
+    else if (selectedLanguage === "ar") {
+        words = numberToWordsArabic(total);
+  }
+    else if (selectedLanguage === "hi") {
+        words = numberToWordsHindi(total);
+    }
+    amountInWordsElement.textContent = words;
+}
+
+receiptLanguageSelect.addEventListener(
+    "change",
+    updateAmountInWords
+);
+
+updateAmountInWords();
 
     printWindow.document.close();
 }
