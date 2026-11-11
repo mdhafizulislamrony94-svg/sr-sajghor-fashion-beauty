@@ -1,2412 +1,2854 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+const express = require("express");
+const cookieParser = require("cookie-parser");
+const path = require("path");
+const fs = require("fs");
+const multer = require("multer");
+const crypto = require("crypto");
 
-    <title>SR সাজঘর - Admin Panel</title>
 
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-        body {
-            
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            color: #222;
-        }
+app.use(express.json());
 
-        header {
-            background: #111;
-            color: white;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+app.use(cookieParser());
 
-        header h1 {
-            font-size: 24px;
-        }
+// ================= SECURE ADMIN PANEL =================
 
-        .logout-btn {
-            background: #d32f2f;
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 7px;
-            cursor: pointer;
-        }
+app.get("/admin.html", (req, res) => {
 
-        .container {
-            width: 95%;
-            max-width: 1200px;
-            margin: 25px auto;
-        }
+    const token = getCookie(req, "adminToken");
 
-        .dashboard {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 15px;
-            margin-bottom: 25px;
+    if (!token || !adminSessions.has(token)) {
+        return res.redirect("/admin-login.html");
     }
 
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-            text-align: center;
-        }
+    res.sendFile(path.join(__dirname, "admin.html"));
+});
 
-        .card h2 {
-            font-size: 30px;
-            margin-top: 8px;
-        }
 
-        .section {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-            margin-bottom: 25px;
-        }
+// ================= STATIC FILES =================
 
-        .section h2 {
-            margin-bottom: 20px;
-        }
+// ================= SECURE ADMIN PANEL =================
 
-        .product-form {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
+app.get("/admin-panel.html", (req, res) => {
 
-        .product-form input,
-        .product-form textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 7px;
-            font-size: 15px;
-        }
+    const token = getCookie(req, "adminToken");
 
-        .product-form textarea {
-            min-height: 90px;
-            resize: vertical;
-        }
+    if (!token || !adminSessions.has(token)) {
+        return res.redirect("/admin-login.html");
+    }
 
-        .full {
-            grid-column: 1 / -1;
-        }
+    res.sendFile(
+        path.join(__dirname, "admin-panel.html")
+    );
+});
 
-        .add-btn {
-            background: #198754;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 7px;
-            cursor: pointer;
-            font-size: 16px;
-        }
+app.use(express.static(__dirname));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-        .cancel-btn {
-            background: #777;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 7px;
-            cursor: pointer;
-            font-size: 16px;
-            display: none;
-        }
+// ================= ADMIN LOGIN SESSION =================
 
-        .products {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-        }
+const ADMIN_USERNAME = "admin";
+const ADMIN_PASSWORD = "SRadmin123!";
 
-        .product {
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 15px;
-        }
+const adminSessions = new Set();
 
-        .product h3 {
-            margin-bottom: 8px;
-        }
+function getCookie(req, name) {
+    const cookies = req.headers.cookie || "";
 
-        .product p {
-            margin: 6px 0;
-        }
+    const cookie = cookies
+        .split(";")
+        .map(item => item.trim())
+        .find(item => item.startsWith(name + "="));
 
-        .product-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-        }
+    if (!cookie) {
+        return null;
+    }
 
-        .edit-btn,
-        .delete-btn {
-            border: none;
-            color: white;
-            padding: 9px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
+    return cookie.substring(name.length + 1);
+}
 
-        .edit-btn {
-            background: #0d6efd;
-        }
+// ================= ADMIN AUTH MIDDLEWARE =================
 
-        .delete-btn {
-            background: #dc3545;
-        }
+function requireAdmin(req, res, next) {
 
-        .orders-box {
-            margin-top: 10px;
-        }
+    const token = getCookie(req, "adminToken");
 
-        .order {
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 18px;
-            margin-bottom: 15px;
-        }
+    if (!token || !adminSessions.has(token)) {
 
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 12px;
-        }
-
-        .order-id {
-            font-weight: bold;
-        }
-
-        .status {
-            padding: 6px 10px;
-            border-radius: 6px;
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .order p {
-            margin: 7px 0;
-        }
-
-        .product-line {
-            margin: 8px 0;
-            padding: 10px 12px;
-            background: #fff8fc;
-            border-left: 4px solid #d4145a;
-            border-radius: 7px;
-        }
-
-        .product-line-name {
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-
-        .product-line-price {
-            color: #555;
-            font-size: 14px;
-        }
-
-        .product-line-price strong {
-            color: #d4145a;
-        }
-
-        .actions {
-            margin-top: 15px;
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .actions button {
-            border: none;
-            padding: 9px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            color: white;
-        }
-
-        .confirm {
-            background: #198754;
-        }
-
-        .delivered {
-            background: #0d6efd;
-        }
-
-        .cancel {
-            background: #dc3545;
-        }
-
-        .delete {
-            background: #333;
-        }
-
-        .empty {
-            text-align: center;
-            padding: 30px;
-            color: #777;
-        }
-
-        @media (max-width: 800px) {
-            .dashboard {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .products {
-                grid-template-columns: 1fr;
-            }
-
-            .product-form {
-                grid-template-columns: 1fr;
-            }
-
-            .full {
-                grid-column: auto;
-            }
-        }
-
-        @media (max-width: 500px) {
-            .dashboard {
-                grid-template-columns: 1fr;
-            }
-
-            header {
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
-    </style>
-</head>
-
-<body>
-
-<header>
-
-    <h1>🌸 SR সাজঘর Admin Panel</h1>
-
-    <div style="
-        display:flex;
-        align-items:center;
-        gap:15px;
-    ">
-
-        <div
-            id="newOrderNotification"
-            style="
-                display:none;
-                background:#dc3545;
-                color:white;
-                padding:10px 15px;
-                border-radius:8px;
-                font-weight:bold;
-                cursor:pointer;
-            "
-            onclick="goToOrders()"
-        >
-            🔔 নতুন অর্ডার:
-            <span id="newOrderCount">0</span>
-        </div>
-
-        <button class="logout-btn" onclick="logout()">
-            🚪 Logout
-        </button>
-
-    </div>
-
-</header>
-
-
-<div class="container">
-
-    <!-- ================= DASHBOARD ================= -->
-
-    <div class="dashboard">
-
-        <div class="card">
-            <p>📦 মোট অর্ডার</p>
-            <h2 id="totalOrders">0</h2>
-        </div>
-
-        <div class="card">
-            <p>⏳ Pending</p>
-            <h2 id="pendingOrders">0</h2>
-        </div>
-
-         <div class="card">
-             <p>🔵 Confirmed</p>
-             <h2 id="confirmedOrders">0</h2>
-         </div>
-
-        <div class="card">
-            <p>✅ Delivered</p>
-            <h2 id="deliveredOrders">0</h2>
-        </div>
-
-        <div class="card">
-            <p>🛍️ মোট Product</p>
-            <h2 id="totalProducts">0</h2>
-        </div>
-
-        <div class="card">
-            <p>💰 মোট বিক্রি</p>
-            <h2 id="totalSales">৳ 0</h2>
-        </div>
-    </div>
-
-    <!-- ================= PRODUCT MANAGEMENT ================= -->
-
-    <div class="section">
-
-        <h2>🛍️ Product Management</h2>
-
-        <form id="productForm" class="product-form">
-
-            <input
-                type="text"
-                id="productName"
-                placeholder="Product Name"
-                required
-            >
-
-            <input
-                type="number"
-                id="productPrice"
-                placeholder="Price"
-                min="0"
-                required
-            >
-
-            <input
-                type="number"
-                id="productStock"
-                placeholder="Stock"
-                min="0"
-                required
-            >
-
-            <input
-                type="text"
-                id="productCategory"
-                placeholder="Category"
-                required
-            >
-
-            <textarea
-                id="productDescription"
-                class="full"
-                placeholder="Product Description"
-            ></textarea>
-
-            <input
-                type="file"
-                id="productImageFile"
-                class="full"
-                accept="image/jpeg,image/jpg,image/png,image/webp"
-            >
-
-            <button
-                type="submit"
-                id="saveProductBtn"
-                class="add-btn"
-            >
-                ➕ Add Product
-            </button>
-
-            <button
-                type="button"
-                id="cancelEditBtn"
-                class="cancel-btn"
-                onclick="cancelEdit()"
-            >
-                ❌ Cancel Edit
-            </button>
-
-        </form>
-
-    </div>
-
-
-    <!-- ================= PRODUCT LIST ================= -->
-
-    <div class="section">
-
-        <h2>📋 Product List</h2>
-
-        <div id="productsContainer" class="products">
-
-            <div class="empty">
-                Product লোড হচ্ছে...
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- ================= ORDERS ================= -->
-
- <div class="section orders-box">
-
-    <h2>📦 সকল অর্ডার</h2>
-
-    <!-- 🔎 ORDER SEARCH & FILTER -->
-
-    <div style="
-        display:flex;
-        gap:10px;
-        flex-wrap:wrap;
-        margin-bottom:20px;
-    ">
-
-        <input
-            type="text"
-            id="orderSearch"
-            placeholder="🔎 নাম / ফোন / Order ID খুঁজুন..."
-            oninput="filterOrders()"
-            style="
-                flex:1;
-                min-width:220px;
-                padding:12px;
-                border:1px solid #ccc;
-                border-radius:7px;
-                font-size:15px;
-            "
-        >
-
-        <select
-            id="orderStatusFilter"
-            onchange="filterOrders()"
-            style="
-                padding:12px;
-                border:1px solid #ccc;
-                border-radius:7px;
-                font-size:15px;
-                min-width:160px;
-            "
-        >
-
-            <option value="all">📋 সব Order</option>
-
-            <option value="pending">
-                ⏳ Pending
-            </option>
-
-            <option value="confirmed">
-                🔵 Confirmed
-            </option>
-
-            <option value="delivered">
-                🚚 Delivered
-            </option>
-
-            <option value="cancelled">
-                ❌ Cancelled
-            </option>
-
-        </select>
-
-    </div>
-
-    <div id="ordersContainer">
-
-            <div class="empty">
-                অর্ডার লোড হচ্ছে...
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<script>
-
-let editingProductId = null;
-
-
-// ================= LOAD PRODUCTS =================
-
-async function loadProducts() {
-
-    try {
-
-        const response =
-            await fetch("/api/products");
-
-        const data =
-            await response.json();
-
-        if (!data.success) {
-            return;
-        }
-
-        const products =
-            data.products;
-
-        document.getElementById(
-            "totalProducts"
-        ).textContent = products.length;
-
-
-        const container =
-            document.getElementById(
-                "productsContainer"
-            );
-
-
-        if (products.length === 0) {
-
-            container.innerHTML = `
-                <div class="empty">
-                    📭 কোনো Product নেই।
-                </div>
-            `;
-
-            return;
-        }
-
-
-        container.innerHTML = "";
-
-
-products.forEach(product => {
-
-    const div =
-        document.createElement("div");
-
-    div.className = "product";
-
-
-    let imageHTML = "";
-
-    if (product.image) {
-
-        imageHTML = `
-            <img
-                src="${product.image}"
-                alt="${product.name}"
-                style="
-                    width:100%;
-                    height:220px;
-                    object-fit:cover;
-                    border-radius:8px;
-                    margin-bottom:12px;
-                "
-            >
-        `;
+        return res.status(401).json({
+            success: false,
+            message: "Admin Login required"
+        });
 
     }
 
+    next();
+}
 
-    div.innerHTML = `
+// ================= ADMIN LOGIN API =================
 
-        ${imageHTML}
+app.post("/api/admin/login", (req, res) => {
 
-        <h3>
-            🛍️ ${product.name}
-        </h3>
+    const { username, password } = req.body;
 
-        <p>
-            💰 দাম: ৳ ${product.price}
-        </p>
+    if (
+        username !== ADMIN_USERNAME ||
+        password !== ADMIN_PASSWORD
+    ) {
+        return res.status(401).json({
+            success: false,
+            message: "Username অথবা Password ভুল!"
+        });
+    }
 
-        <p>
-            📦 Stock: ${product.stock}
-        </p>
+    const token = crypto.randomBytes(32).toString("hex");
 
-        <p>
-            🏷️ Category: ${product.category}
-        </p>
+    adminSessions.add(token);
 
-        <p>
-            📝 ${product.description || "কোনো Description নেই"}
-        </p>
+    res.setHeader(
+        "Set-Cookie",
+        `adminToken=${token}; HttpOnly; SameSite=Strict; Path=/`
+    );
 
-        <div class="product-actions">
+    res.json({
+        success: true,
+        message: "Admin Login সফল হয়েছে!"
+    });
+});
 
-            <button
-                class="edit-btn"
-                onclick="editProduct(${product.id})">
-                ✏️ Edit
-            </button>
+// ================= CHECK ADMIN LOGIN =================
 
-            <button
-                class="delete-btn"
-                onclick="deleteProduct(${product.id})">
-                🗑️ Delete
-            </button>
+app.get("/api/admin/check", (req, res) => {
 
-        </div>
+    const token = getCookie(req, "adminToken");
 
-    `;
+    if (!token || !adminSessions.has(token)) {
+        return res.status(401).json({
+            success: false,
+            message: "Admin Login required"
+        });
+    }
 
-        container.appendChild(div);
+    res.json({
+        success: true,
+        message: "Admin Login আছে"
+    });
+});
+
+// ================= ADMIN LOGOUT =================
+
+app.post("/api/admin/logout", (req, res) => {
+
+    const token = getCookie(req, "adminToken");
+
+    if (token) {
+        adminSessions.delete(token);
+    }
+
+    res.setHeader(
+        "Set-Cookie",
+        "adminToken=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0"
+    );
+
+    res.json({
+        success: true,
+        message: "Admin Logout সফল হয়েছে!"
+    });
+});
+
+// ================= IMAGE UPLOAD =================
+
+const storageRoot =
+    process.env.RAILWAY_VOLUME_MOUNT_PATH || "/data";
+
+const uploadDir =
+    path.join(storageRoot, "uploads");
+
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, {
+        recursive: true
+    });
+}
+
+app.use(
+    "/uploads",
+    express.static(uploadDir)
+);
+
+const storage = multer.diskStorage({
+
+    destination: (req, file, cb) => {
+        cb(null, uploadDir);
+    },
+
+    filename: (req, file, cb) => {
+
+        const ext =
+            path.extname(file.originalname).toLowerCase();
+
+        cb(
+            null,
+            Date.now() + ext
+        );
+
+    }
 
 });
 
-            
-    } catch (error) {
+const upload = multer({
 
-        document.getElementById(
-            "productsContainer"
-        ).innerHTML = `
-            <div class="empty">
-                ❌ Product লোড করা যাচ্ছে না।
-            </div>
-        `;
+    storage: storage,
 
-    }
+    fileFilter: (req, file, cb) => {
 
-}
-// ================= ADD / UPDATE PRODUCT =================
+        const allowed = [
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".webp"
+        ];
 
-document.getElementById(
-    "productForm"
-).addEventListener(
-    "submit",
-    async function(e) {
+        const ext =
+            path.extname(file.originalname).toLowerCase();
 
-        e.preventDefault();
+        if (allowed.includes(ext)) {
 
-        try {
+            cb(null, true);
 
-            let imageUrl = "";
+        } else {
 
-            // ================= IMAGE =================
-
-            const imageFile =
-                document.getElementById(
-                    "productImageFile"
-                ).files[0];
-
-
-            // Edit করার সময় নতুন ছবি না দিলে
-            // পুরোনো ছবি রাখা হবে
-
-            if (
-                editingProductId !== null &&
-                !imageFile
-            ) {
-
-                const productsResponse =
-                    await fetch("/api/products");
-
-                const productsData =
-                    await productsResponse.json();
-
-                const oldProduct =
-    productsData.products.find(
-        item =>
-            String(item.id) ===
-            String(editingProductId)
-    );
-                if (oldProduct) {
-
-                    imageUrl =
-                        oldProduct.image || "";
-
-                }
-
-            }
-
-
-            // ================= UPLOAD NEW IMAGE =================
-
-            if (imageFile) {
-
-                const formData =
-                    new FormData();
-
-                formData.append(
-                    "image",
-                    imageFile
-                );
-
-
-                const uploadResponse =
-                    await fetch(
-                        "/api/products/upload-image",
-                        {
-                            method: "POST",
-                            body: formData
-                        }
-                    );
-
-
-                const uploadData =
-                    await uploadResponse.json();
-
-
-                if (!uploadData.success) {
-
-                    alert(
-                        "❌ " +
-                        uploadData.message
-                    );
-
-                    return;
-                }
-
-
-                imageUrl =
-                    uploadData.image;
-
-            }
-
-
-            // ================= PRODUCT DATA =================
-
-            const product = {
-
-                name:
-                    document.getElementById(
-                        "productName"
-                    ).value,
-
-                price:
-                    Number(
-                        document.getElementById(
-                            "productPrice"
-                        ).value
-                    ),
-
-                stock:
-                    Number(
-                        document.getElementById(
-                            "productStock"
-                        ).value
-                    ),
-
-                category:
-                    document.getElementById(
-                        "productCategory"
-                    ).value,
-
-                description:
-                    document.getElementById(
-                        "productDescription"
-                    ).value,
-
-                image:
-                    imageUrl
-
-            };
-
-
-            // ================= SAVE PRODUCT =================
-
-            let response;
-
-
-            if (
-                editingProductId === null
-            ) {
-
-                response =
-                    await fetch(
-                        "/api/products",
-                        {
-                            method: "POST",
-
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
-
-                            body:
-                                JSON.stringify(
-                                    product
-                                )
-                        }
-                    );
-
-            } else {
-
-                response =
-                    await fetch(
-                        `/api/products/${editingProductId}`,
-                        {
-                            method: "PUT",
-
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
-
-                            body:
-                                JSON.stringify(
-                                    product
-                                )
-                        }
-                    );
-
-            }
-
-
-            const data =
-                await response.json();
-
-
-            if (data.success) {
-
-                alert(
-                    editingProductId === null
-                        ? "✅ Product যোগ হয়েছে!"
-                        : "✅ Product আপডেট হয়েছে!"
-                );
-
-
-                document.getElementById(
-                    "productForm"
-                ).reset();
-
-
-                editingProductId = null;
-
-
-                document.getElementById(
-                    "saveProductBtn"
-                ).textContent =
-                    "➕ Add Product";
-
-
-                document.getElementById(
-                    "cancelEditBtn"
-                ).style.display =
-                    "none";
-
-
-                loadProducts();
-
-            } else {
-
-                alert(
-                    "❌ " +
-                    data.message
-                );
-
-            }
-
-        } catch (error) {
-
-            console.error(error);
-
-            alert(
-                "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।"
+            cb(
+                new Error(
+                    "শুধু JPG, JPEG, PNG অথবা WEBP ছবি আপলোড করা যাবে।"
+                )
             );
 
         }
+
+    }
+
+});
+
+
+// ================= VIDEO UPLOAD =================
+
+const videoDir = path.join(storageRoot, "videos");
+
+if (!fs.existsSync(videoDir)) {
+    fs.mkdirSync(videoDir, {
+        recursive: true
+    });
+}
+
+app.use("/videos", express.static(videoDir));
+
+const videoStorage = multer.diskStorage({
+
+    destination: (req, file, cb) => {
+        cb(null, videoDir);
+    },
+
+    filename: (req, file, cb) => {
+
+        const ext =
+            path.extname(file.originalname).toLowerCase();
+
+        cb(
+            null,
+            "video-" + Date.now() + ext
+        );
+
+    }
+
+});
+
+const videoUpload = multer({
+
+    storage: videoStorage,
+
+    limits: {
+         fileSize: 500 * 1024 * 1024
+    },
+
+    fileFilter: (req, file, cb) => {
+
+        const allowed = [
+            ".mp4",
+            ".webm",
+            ".ogg"
+        ];
+
+        const ext =
+            path.extname(file.originalname).toLowerCase();
+
+        if (allowed.includes(ext)) {
+
+            cb(null, true);
+
+        } else {
+
+            cb(
+                new Error(
+                    "শুধু MP4, WEBM অথবা OGG ভিডিও আপলোড করা যাবে।"
+                )
+            );
+
+        }
+
+    }
+
+});
+
+
+
+// Upload Multiple Product Images API
+
+app.post(
+    "/api/products/upload-image",
+    requireAdmin,
+    upload.array("images", 10),
+    (req, res) => {
+
+        if (!req.files || req.files.length === 0) {
+
+            return res.status(400).json({
+                success: false,
+                message: "ছবি নির্বাচন করুন।"
+            });
+
+        }
+
+        const images = req.files.map(file =>
+            "/uploads/" + file.filename
+        );
+
+        res.json({
+            success: true,
+            message: "ছবিগুলো সফলভাবে Upload হয়েছে।",
+            images: images
+        });
 
     }
 );
 
 
-// ================= EDIT PRODUCT =================
+// ================= VIDEO UPLOAD =================
 
-async function editProduct(id) {
+app.post(
+    "/api/videos/upload",
+
+    requireAdmin,
+
+    videoUpload.single("video"),
+
+    function (req, res) {
+
+        if (!req.file) {
+
+            return res.status(400).json({
+                success: false,
+                message: "কোনো ভিডিও নির্বাচন করা হয়নি"
+            });
+
+        }
+
+        const productName =
+            req.body.productName || "";
+
+        const productPrice =
+            req.body.productPrice || "";
+
+        const videoData = {
+
+            name: req.file.filename,
+
+            url:
+                "/videos/" +
+                req.file.filename,
+
+            productName:
+                productName,
+
+            productPrice:
+                productPrice,
+
+            createdAt:
+                new Date().toISOString()
+
+        };
+
+        videos.push(videoData);
+
+        saveVideos();
+
+        res.json({
+
+            success: true,
+
+            message:
+                "ভিডিও সফলভাবে আপলোড হয়েছে",
+
+            video:
+                videoData
+
+        });
+
+    }
+);
+
+
+// ================= VIDEO DATA =================
+
+const videosFile = path.join(storageRoot, "videos.json");
+
+function loadVideos() {
+
+    if (!fs.existsSync(videosFile)) {
+
+        fs.writeFileSync(
+            videosFile,
+            "[]",
+            "utf8"
+        );
+
+        return [];
+    }
 
     try {
 
-        const response =
-            await fetch("/api/products");
+        const data = fs.readFileSync(
+            videosFile,
+            "utf8"
+        );
 
-        const data =
-            await response.json();
+        return JSON.parse(data);
+
+    } catch (error) {
+
+        console.error(
+            "❌ videos.json পড়া যায়নি:",
+            error
+        );
+
+        return [];
+    }
+}
+
+let videos = loadVideos();
+
+function saveVideos() {
+
+    fs.writeFileSync(
+        videosFile,
+        JSON.stringify(videos, null, 2),
+        "utf8"
+    );
+}
+
+// ================= PRODUCTS =================
+
+const productsFile = path.join(__dirname, "products.json");
+
+function loadProducts() {
+
+    if (!fs.existsSync(productsFile)) {
+
+        fs.writeFileSync(
+            productsFile,
+            "[]",
+            "utf8"
+        );
+
+        return [];
+    }
+
+    try {
+
+        const data = fs.readFileSync(
+            productsFile,
+            "utf8"
+        );
+
+        return JSON.parse(data);
+
+    } catch (error) {
+
+        console.error(
+            "❌ products.json পড়া যায়নি:",
+            error
+        );
+
+        return [];
+    }
+}
+
+
+let products = loadProducts();
+
+
+function saveProducts() {
+
+    fs.writeFileSync(
+        productsFile,
+        JSON.stringify(products, null, 2),
+        "utf8"
+    );
+
+}
+
+
+// ================= ORDERS =================
+
+const ordersFile = path.join(__dirname, "orders.json");
+
+
+function loadOrders() {
+
+    if (!fs.existsSync(ordersFile)) {
+
+        fs.writeFileSync(
+            ordersFile,
+            "[]",
+            "utf8"
+        );
+
+        return [];
+    }
+
+
+    try {
+
+        const data = fs.readFileSync(
+            ordersFile,
+            "utf8"
+        );
+
+        return JSON.parse(data);
+
+    } catch (error) {
+
+        console.error(
+            "❌ orders.json পড়া যায়নি:",
+            error
+        );
+
+        return [];
+    }
+}
+
+
+let orders = loadOrders();
+
+
+function saveOrders() {
+
+    fs.writeFileSync(
+        ordersFile,
+        JSON.stringify(orders, null, 2),
+        "utf8"
+    );
+
+}
+
+
+// ================= PRODUCT API =================
+
+
+// Get Products
+
+app.get("/api/products", (req, res) => {
+
+    res.json({
+
+        success: true,
+
+        products: products
+
+    });
+
+});
+
+// ================= ADD NEW PRODUCT API =================
+
+app.post("/api/products", requireAdmin, (req, res) => {
+
+    const {
+        name,
+        price,
+        stock,
+        category,
+        description,
+        images,
+        image
+    } = req.body;
+
+    if (!name || price === undefined || !category) {
+        return res.status(400).json({
+            success: false,
+            message: "Product Name, Price এবং Category দিন।"
+        });
+    }
+
+    const productImages = Array.isArray(images)
+        ? images.slice(0, 10)
+        : (image ? [image] : []);
+
+    const newProduct = {
+        id: Date.now(),
+        name: String(name).trim(),
+        price: Number(price),
+        stock: Number(stock || 0),
+        category: String(category).trim(),
+        description: description || "",
+        image: productImages[0] || "",
+        images: productImages
+    };
+
+    products.push(newProduct);
+
+    saveProducts();
+
+    res.json({
+        success: true,
+        message: "Product সফলভাবে Add হয়েছে।",
+        product: newProduct
+    });
+
+});
+
+
+ // Update Product
+
+app.put("/api/products/:id", requireAdmin, (req, res) => {
+
+    const token = getCookie(req, "adminToken");
+
+    if (!token || !adminSessions.has(token)) {
+        return res.status(401).json({
+            success: false,
+            message: "Admin Login required"
+        });
+    }
+
+    const id = Number(req.params.id);
+
+    const product = products.find(
+        item => item.id === id
+    );
+
+    if (!product) {
+        return res.status(404).json({
+            success: false,
+            message: "Product পাওয়া যায়নি।"
+        });
+    }
+
+    const {
+        name,
+        price,
+        stock,
+        category,
+        description,
+        image,
+        images
+    } = req.body;
+
+    if (name !== undefined)
+        product.name = name;
+
+    if (price !== undefined)
+        product.price = Number(price);
+
+    if (stock !== undefined)
+        product.stock = Number(stock);
+
+    if (category !== undefined)
+        product.category = category;
+
+    if (description !== undefined)
+        product.description = description;
+
+    if (images !== undefined && Array.isArray(images)) {
+
+        product.images = images.slice(0, 10);
+        product.image = product.images[0] || "";
+
+    } else if (image !== undefined) {
+
+        product.image = image;
+        product.images = image ? [image] : [];
+
+    }
+
+    saveProducts();
+
+    res.json({
+        success: true,
+        message: "✅ Product আপডেট হয়েছে।",
+        product: product
+    });
+
+});
+
+
+
+// Delete Product
+
+app.delete("/api/products/:id", (req, res) => {
+
+    // Admin Login Chec
+
+    const id =
+        Number(req.params.id);
+
+
+    const productIndex =
+        products.findIndex(
+            item => item.id === id
+        );
+
+
+    if (productIndex === -1) {
+
+        return res.status(404).json({
+
+            success: false,
+
+            message:
+                "Product পাওয়া যায়নি।"
+
+        });
+
+    }
+
+
+    products.splice(
+        productIndex,
+        1
+    );
+
+
+    saveProducts();
+
+
+    res.json({
+
+        success: true,
+
+        message:
+            "🗑️ Product মুছে ফেলা হয়েছে।"
+
+    });
+
+});
+
+// ================= CUSTOMER SAVED ADDRESSES =================
+
+const customerAddressesFile =
+    path.join(__dirname, "customer-addresses.json");
+
+function loadCustomerAddresses() {
+
+    if (!fs.existsSync(customerAddressesFile)) {
+
+        fs.writeFileSync(
+            customerAddressesFile,
+            "{}",
+            "utf8"
+        );
+
+        return {};
+    }
+
+    try {
+
+        return JSON.parse(
+            fs.readFileSync(
+                customerAddressesFile,
+                "utf8"
+            )
+        );
+
+    } catch (error) {
+
+        console.error(
+            "❌ Customer Addresses পড়া যায়নি:",
+            error
+        );
+
+        return {};
+    }
+}
+
+let customerAddresses =
+    loadCustomerAddresses();
+
+
+function saveCustomerAddresses() {
+
+    fs.writeFileSync(
+        customerAddressesFile,
+        JSON.stringify(
+            customerAddresses,
+            null,
+            2
+        ),
+        "utf8"
+    );
+}
+
+
+// GET Saved Addresses
+app.get(
+    "/api/customer/addresses",
+    (req, res) => {
+
+        const token =
+            getCookie(
+                req,
+                "customerToken"
+            );
+
+        if (
+            !token ||
+            !global.customerSessions ||
+            !global.customerSessions.has(token)
+        ) {
+
+            return res.status(401).json({
+                success: false,
+                message:
+                    "Customer Login required"
+            });
+        }
+
+        const customer =
+            global.customerSessions.get(token);
+
+        const customerId =
+            customer.customerId;
+
+        res.json({
+            success: true,
+            addresses:
+                customerAddresses[customerId] || []
+        });
+    }
+);
+
+
+// POST Save Address
+app.post(
+    "/api/customer/addresses",
+    (req, res) => {
+
+        const token =
+            getCookie(
+                req,
+                "customerToken"
+            );
+
+        if (
+            !token ||
+            !global.customerSessions ||
+            !global.customerSessions.has(token)
+        ) {
+
+            return res.status(401).json({
+                success: false,
+                message:
+                    "Customer Login required"
+            });
+        }
+
+        const customer =
+            global.customerSessions.get(token);
+
+        const customerId =
+            customer.customerId;
+
+        const {
+            label,
+            address
+        } = req.body;
+
+        if (!address || !address.trim()) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Address লিখুন।"
+            });
+        }
+
+        if (
+            !customerAddresses[customerId]
+        ) {
+
+            customerAddresses[customerId] = [];
+        }
+
+        customerAddresses[customerId].push({
+
+            id: Date.now(),
+
+            label:
+                label ||
+                "বাসা",
+
+            address:
+                address.trim(),
+
+            createdAt:
+                new Date().toISOString()
+        });
+
+        saveCustomerAddresses();
+
+        res.json({
+            success: true,
+            message:
+                "Address সফলভাবে Save হয়েছে।"
+        });
+    }
+);
+
+// ================= DELETE CUSTOMER SAVED ADDRESS =================
+
+app.delete(
+    "/api/customer/addresses/:id",
+    (req, res) => {
+
+        const token =
+            getCookie(
+                req,
+                "customerToken"
+            );
+
+        if (
+            !token ||
+            !global.customerSessions ||
+            !global.customerSessions.has(token)
+        ) {
+
+            return res.status(401).json({
+                success: false,
+                message:
+                    "Customer Login required"
+            });
+        }
+
+        const customer =
+            global.customerSessions.get(token);
+
+        const customerId =
+            customer.customerId;
+
+        const addressId =
+            Number(req.params.id);
+
+        const addresses =
+            customerAddresses[customerId] || [];
+
+        const newAddresses =
+            addresses.filter(
+                address =>
+                    Number(address.id) !== addressId
+            );
+
+        if (
+            newAddresses.length ===
+            addresses.length
+        ) {
+
+            return res.status(404).json({
+                success: false,
+                message:
+                    "Address পাওয়া যায়নি।"
+            });
+        }
+
+        customerAddresses[customerId] =
+            newAddresses;
+
+        saveCustomerAddresses();
+
+        res.json({
+            success: true,
+            message:
+                "Address সফলভাবে Delete হয়েছে।"
+        });
+    }
+);
+
+
+// ================= ORDER API =================
+
+app.post("/api/orders", (req, res) => {
+
+const {
+    name,
+    phone,
+    address,
+    note,
+    products: orderedProducts,
+    total,
+    paymentMethod,
+    paymentSenderPhone,
+    transactionId
+} = req.body;
+
+// ================= CUSTOMER ID =================
+
+let customerId = null;
+
+const customerToken =
+    req.cookies.customerToken;
+
+if (
+    customerToken &&
+    global.customerSessions
+) {
+
+    customerId =
+        global.customerSessions.get(
+            customerToken
+        ) || null;
+
+}
+
+// ================= PAYMENT CHECK =================
+
+const allowedPaymentMethods = [
+    "bkash",
+    "nagad",
+    "rocket",
+    "cod"
+];
+
+if (!allowedPaymentMethods.includes(paymentMethod)) {
+    return res.status(400).json({
+        success: false,
+        message: "একটি পেমেন্ট পদ্ধতি নির্বাচন করুন।"
+    });
+}
+
+if (
+    paymentMethod !== "cod" &&
+    (!paymentSenderPhone || !transactionId)
+) {
+    return res.status(400).json({
+        success: false,
+        message: "পেমেন্ট নম্বর ও Transaction ID দিন।"
+    });
+}
+
+    // ================= BASIC CHECK =================
+
+    if (
+        !name ||
+        !phone ||
+        !address ||
+        !Array.isArray(orderedProducts) ||
+        orderedProducts.length === 0
+    ) {
+
+        return res.status(400).json({
+
+            success: false,
+
+            message:
+                "সব তথ্য পূরণ করুন।"
+
+        });
+
+    }
+
+
+    // ================= CHECK STOCK =================
+
+    for (const item of orderedProducts) {
+
+        const productId =
+            Number(item.id ?? item.productId);
+
+        const quantity =
+            Number(item.quantity || 1);
 
 
         const product =
-            data.products.find(
-                item => String(item.id) === String(id)
+            products.find(
+                p => Number(p.id) === productId
             );
 
 
         if (!product) {
 
-            alert(
-                "❌ Product পাওয়া যায়নি।"
-            );
+            return res.status(400).json({
 
-            return;
-        }
+                success: false,
 
-
-        document.getElementById(
-            "productName"
-        ).value =
-            product.name;
-
-
-        document.getElementById(
-            "productPrice"
-        ).value =
-            product.price;
-
-
-        document.getElementById(
-            "productStock"
-        ).value =
-            product.stock;
-
-
-        document.getElementById(
-            "productCategory"
-        ).value =
-            product.category;
-
-
-        document.getElementById(
-            "productDescription"
-        ).value =
-            product.description;
-
-            
-        editingProductId =
-            id;
-
-
-        document.getElementById(
-            "saveProductBtn"
-        ).textContent =
-            "💾 Update Product";
-
-
-        document.getElementById(
-            "cancelEditBtn"
-        ).style.display =
-            "block";
-
-
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth"
-        });
-
-    } catch (error) {
-
-        alert(
-            "❌ Product তথ্য পাওয়া যায়নি।"
-        );
-
-    }
-
-}
-
-
-// ================= CANCEL EDIT =================
-
-function cancelEdit() {
-
-    editingProductId = null;
-
-    document.getElementById(
-        "productForm"
-    ).reset();
-
-    document.getElementById(
-        "saveProductBtn"
-    ).textContent =
-        "➕ Add Product";
-
-    document.getElementById(
-        "cancelEditBtn"
-    ).style.display =
-        "none";
-
-}
-
-
-// ================= DELETE PRODUCT =================
-
-async function deleteProduct(id) {
-
-    const confirmDelete =
-        confirm(
-            "আপনি কি এই Product মুছে ফেলতে চান?"
-        );
-
-
-    if (!confirmDelete) {
-        return;
-    }
-
-
-    try {
-
-        const response =
-            await fetch(
-                `/api/products/${id}`,
-                {
-                    method: "DELETE"
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (data.success) {
-
-            alert(
-                "🗑️ Product মুছে ফেলা হয়েছে!"
-            );
-
-            loadProducts();
-
-        } else {
-
-            alert(
-                "❌ " + data.message
-            );
-
-        }
-
-    } catch (error) {
-
-        alert(
-            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।"
-        );
-
-    }
-
-}
-
-
-// ================= LOAD ORDERS =================
-
-async function loadOrders() {
-
-    try {
-
-        const response =
-            await fetch("/api/orders");
-
-        const data =
-            await response.json();
-
-        if (!data.success) {
-            return;
-        }
-
-        const orders =
-            data.orders;
-
-        window.currentOrders = orders;
-
-
-        // ================= TOTAL ORDERS =================
-
-        document.getElementById(
-            "totalOrders"
-        ).textContent =
-            orders.length;
-
-
-        // ================= PENDING ORDERS =================
-
-        document.getElementById(
-            "pendingOrders"
-        ).textContent =
-            orders.filter(
-                order =>
-                    order.status === "pending"
-            ).length;
-
-
-        // ================= CONFIRMED ORDERS =================
-
-        document.getElementById(
-            "confirmedOrders"
-        ).textContent =
-            orders.filter(
-                order =>
-                    order.status === "confirmed"
-            ).length;
-
-
-        // ================= DELIVERED ORDERS =================
-
-        document.getElementById(
-            "deliveredOrders"
-        ).textContent =
-            orders.filter(
-                order =>
-                    order.status === "delivered"
-            ).length;
-
-
-        // ================= CANCELLED ORDERS =================
-
-        const cancelledCount =
-            orders.filter(
-                order =>
-                    order.status === "cancelled"
-            ).length;
-
-
-        const cancelledElement =
-            document.getElementById(
-                "cancelledOrders"
-            );
-
-        if (cancelledElement) {
-
-            cancelledElement.textContent =
-                cancelledCount;
-
-        }
-
-
-        // ================= TOTAL SALES =================
-
-        const totalSales =
-            orders
-                .filter(
-                    order =>
-                        order.status === "delivered"
-                )
-                .reduce(
-                    (sum, order) =>
-                        sum + Number(order.total || 0),
-                    0
-                );
-
-
-        const salesElement =
-            document.getElementById(
-                "totalSales"
-            );
-
-        if (salesElement) {
-
-            salesElement.textContent =
-                "৳ " +
-                totalSales.toLocaleString("en-BD");
-
-        }
-
-
-        // ================= ORDER CONTAINER =================
-
-        const container =
-            document.getElementById(
-                "ordersContainer"
-            );
-
-
-        if (orders.length === 0) {
-
-            container.innerHTML = `
-                <div class="empty">
-                    📭 এখনো কোনো অর্ডার নেই।
-                </div>
-            `;
-
-            return;
-        }
-
-
-        container.innerHTML = "";
-
-
-        // ================= DISPLAY ORDERS =================
-
-        orders
-            .slice()
-            .reverse()
-            .forEach(order => {
-
-                const orderDiv =
-                    document.createElement(
-                        "div"
-                    );
-
-
-                orderDiv.className =
-                    "order";
-
-
-                orderDiv.innerHTML = `
-
-                    <div class="order-header">
-
-                        <div class="order-id">
-                            📦 ${order.orderId}
-                        </div>
-
-                        <div class="status">
-                            ${order.status}
-                        </div>
-
-                    </div>
-
-
-                    <p>
-                        👤 <strong>নাম:</strong>
-                        ${order.name}
-                    </p>
-
-
-                    <p>
-                        📱 <strong>ফোন:</strong>
-                        ${order.phone}
-                    </p>
-
-
-                    <p>
-                        🏠 <strong>ঠিকানা:</strong>
-                        ${order.address}
-                    </p>
-
-
-                    <p>
-                        🛍️ <strong>পণ্য:</strong>
-                        ${formatProducts(order.products)}
-                    </p>
-
-
-                    <p>
-                        💰 <strong>মোট:</strong>
-                        ৳ ${order.total}
-                    </p>
-
-
-                    <p>
-                        📝 <strong>নোট:</strong>
-                        ${order.note || "নেই"}
-                    </p>
-
-
-                    <div class="actions">
-
-                        <button
-                            onclick="callCustomer('${order.phone}')">
-                            📞 Call
-                        </button>
-
-
-                        <button
-                            onclick="whatsappCustomer('${order.phone}')">
-                            💬 WhatsApp
-                        </button>
-
-
-                        <button
-                            onclick="copyOrderId('${order.orderId}')">
-                            📋 Copy ID
-                        </button>
-
-
-                        <button
-                            onclick="printOrder('${order.orderId}')">
-                            🖨️ Print
-                        </button>
-
-
-                        <button
-                            class="confirm"
-                            onclick="updateStatus('${order.orderId}', 'confirmed')">
-                            ✅ Confirm
-                        </button>
-
-
-                        <button
-                            class="delivered"
-                            onclick="updateStatus('${order.orderId}', 'delivered')">
-                            🚚 Delivered
-                        </button>
-
-
-                        <button
-                            class="cancel"
-                            onclick="updateStatus('${order.orderId}', 'cancelled')">
-                            ❌ Cancel
-                        </button>
-
-
-                        <button
-                            class="delete"
-                            onclick="deleteOrder('${order.orderId}')">
-                            🗑️ Delete
-                        </button>
-
-                    </div>
-
-                `;
-
-
-                container.appendChild(
-                    orderDiv
-                );
+                message:
+                    `"${item.name || "Product"}" পাওয়া যায়নি।`
 
             });
- // ================= APPLY FILTER =================
 
-    filterOrders();
+        }
 
-    } catch (error) {
 
-        console.error(
-            "Order Load Error:",
-            error
+        if (
+            !Number.isFinite(quantity) ||
+            quantity <= 0
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Product quantity সঠিক নয়।"
+
+            });
+
+        }
+
+
+        if (Number(product.stock) < quantity) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    `"${product.name}" এর পর্যাপ্ত Stock নেই। বর্তমানে Stock: ${product.stock}`
+
+            });
+
+        }
+
+    }
+
+
+    // ================= REDUCE STOCK =================
+
+    for (const item of orderedProducts) {
+
+        const productId =
+            Number(item.id ?? item.productId);
+
+        const quantity =
+            Number(item.quantity || 1);
+
+
+        const product =
+            products.find(
+                p => Number(p.id) === productId
+            );
+
+
+        product.stock =
+            Number(product.stock) - quantity;
+
+    }
+
+
+    // ================= SAVE PRODUCT STOCK =================
+
+    saveProducts();
+
+
+    // ================= CREATE ORDER =================
+
+    const orderId =
+        "SZ" + Date.now();
+
+
+    const newOrder = {
+
+    orderId:
+        orderId,
+
+    customerId:
+        customerId,
+
+    name:
+        name,
+
+    phone:
+        phone,
+
+    address:
+        address,
+
+    note:
+        note || "",
+    paymentMethod: paymentMethod,
+    paymentSenderPhone: paymentMethod === "cod" ? "" : paymentSenderPhone,
+    transactionId: paymentMethod === "cod" ? "" : transactionId,
+    paymentStatus: paymentMethod === "cod" ? "due_on_delivery" : "pending_verification",
+
+    products: orderedProducts,
+
+    total:
+        Number(total),
+
+    status:
+        "pending",
+
+    createdAt:
+        new Date().toISOString()
+
+};
+
+
+    orders.push(newOrder);
+
+    saveOrders();
+
+
+    console.log(
+        "📦 নতুন Order:",
+        newOrder
+    );
+
+    console.log(
+        "📦 Product Stock automatically কমেছে।"
+    );
+
+
+    res.json({
+
+        success: true,
+
+        message:
+            "অর্ডার সফলভাবে গ্রহণ করা হয়েছে এবং Stock আপডেট হয়েছে।",
+
+        order:
+            newOrder
+
+    });
+
+});
+
+// ================= GET ADMIN ORDERS =================
+
+app.get("/api/orders", requireAdmin, (req, res) => {
+
+    // Admin Login Check
+
+    res.json({
+        success: true,
+        orders: orders
+    });
+
+});
+
+// ================= VERIFY ORDER PAYMENT =================
+
+app.put(
+    "/api/orders/:orderId/payment",
+    requireAdmin,
+    (req, res) => {
+
+        const orderId = req.params.orderId;
+
+        const order = orders.find(
+            item => item.orderId === orderId
         );
 
-        document.getElementById(
-            "ordersContainer"
-        ).innerHTML = `
-            <div class="empty">
-                ❌ Order লোড করা যাচ্ছে না।
-            </div>
-        `;
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: "অর্ডার পাওয়া যায়নি।"
+            });
+        }
+
+        // COD পেমেন্ট যাচাই করা যাবে না
+        if (order.paymentMethod === "cod") {
+            return res.status(400).json({
+                success: false,
+                message: "COD অর্ডারের টাকা ডেলিভারির সময় নেওয়া হবে।"
+            });
+        }
+
+        // মোবাইল পেমেন্টের প্রয়োজনীয় তথ্য পরীক্ষা
+        if (
+            !["bkash", "nagad", "rocket"].includes(order.paymentMethod) ||
+            !order.paymentSenderPhone ||
+            !order.transactionId
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "পেমেন্টের তথ্য সঠিক নয়।"
+            });
+        }
+
+        // পেমেন্ট যাচাই সম্পন্ন
+        order.paymentStatus = "verified";
+
+        order.paymentVerifiedAt =
+            new Date().toISOString();
+
+        saveOrders();
+
+        console.log(
+            "✅ Payment Verified:",
+            order.orderId
+        );
+
+        return res.json({
+            success: true,
+            message: "পেমেন্ট যাচাই সফল হয়েছে।",
+            order: order
+        });
 
     }
-
-}
-
-
-// ================= FORMAT PRODUCTS =================
-
-function formatProducts(products) {
-
-    if (Array.isArray(products)) {
-
-        return products
-            .map(product => {
-
-                if (
-                    typeof product === "object"
-                ) {
-
-                    return `${product.name || "পণ্য"} × ${product.quantity || 1}`;
-
-                }
-
-                return product;
-
-            })
-            .join(", ");
-
-    }
-
-    return products || "পণ্য নেই";
-
-}
-
+);
 
 // ================= UPDATE ORDER STATUS =================
 
-async function updateStatus(
-    orderId,
-    status
-) {
-
-    try {
-
-        const response =
-            await fetch(
-                `/api/orders/${orderId}/status`,
-                {
-                    method: "PUT",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:
-                        JSON.stringify({
-                            status: status
-                        })
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (data.success) {
-
-            alert(
-                "✅ Order Status আপডেট হয়েছে!"
-            );
-
-            await loadOrders();
-
-        } else {
-
-            alert(
-                "❌ " + data.message
-            );
-
-        }
-
-    } catch (error) {
-
-        alert(
-            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।"
-        );
-
-    }
-
-}
-
-
-// ================= DELETE ORDER =================
-
-async function deleteOrder(orderId) {
-
-    const confirmDelete =
-        confirm(
-            "আপনি কি এই অর্ডারটি মুছে ফেলতে চান?"
-        );
-
-
-    if (!confirmDelete) {
-        return;
-    }
-
-
-    try {
-
-        const response =
-            await fetch(
-                `/api/orders/${orderId}`,
-                {
-                    method: "DELETE"
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (data.success) {
-
-            alert(
-                "🗑️ অর্ডার মুছে ফেলা হয়েছে!"
-            );
-
-            loadOrders();
-
-        } else {
-
-            alert(
-                "❌ " + data.message
-            );
-
-        }
-
-    } catch (error) {
-
-        alert(
-            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।"
-        );
-
-    }
-
-}
-
-
-// ================= LOGOUT =================
-
-async function logout() {
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/admin/logout",
-                {
-                    method: "POST"
-                }
-            );
-
-        const data =
-            await response.json();
-
-        window.location.href =
-            "/admin-login.html";
-
-    } catch (error) {
-
-        console.error(
-            "Logout Error:",
-            error
-        );
-
-        window.location.href =
-            "/admin-login.html";
-    }
-
-}
-
-// ================= ORDER SEARCH & FILTER =================
-
-function filterOrders() {
-
-    const search =
-        document.getElementById("orderSearch")
-            .value
-            .toLowerCase()
-            .trim();
-
-    const status =
-        document.getElementById("orderStatusFilter")
-            .value;
-
-    const orderElements =
-        document.querySelectorAll(
-            "#ordersContainer .order"
-        );
-
-    orderElements.forEach(orderElement => {
-
-        const text =
-            orderElement.innerText.toLowerCase();
-
-        const matchesSearch =
-            text.includes(search);
-
-        const orderStatus =
-            orderElement
-                .querySelector(".status")
-                .innerText
-                .trim()
-                .toLowerCase();
-
-        const matchesStatus =
-            status === "all" ||
-            orderStatus === status;
-
-        if (matchesSearch && matchesStatus) {
-
-            orderElement.style.display = "";
-
-        } else {
-
-            orderElement.style.display = "none";
-
-        }
-
-    });
-}
-
-// ================= ADMIN LOGIN CHECK =================
-
-async function checkAdminLogin() {
-
-    try {
-
-        const response =
-            await fetch("/api/admin/check", {
-                credentials: "include"
+app.put(
+    "/api/orders/:orderId/status",
+    requireAdmin,
+    (req, res) => {
+
+
+        const orderId = req.params.orderId;
+
+        const { status } = req.body;
+
+        const allowedStatus = [
+            "pending",
+            "confirmed",
+            "delivered",
+            "cancelled"
+        ];
+
+        if (!allowedStatus.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: "ভুল Status"
             });
-
-        if (!response.ok) {
-
-            window.location.href =
-                "/admin-login.html";
-
-            return false;
         }
 
-        return true;
-
-    } catch (error) {
-
-        console.error(
-            "Admin Login Check Error:",
-            error
+        // Find Order
+        const order = orders.find(
+            item => item.orderId === orderId
         );
 
-        window.location.href =
-            "/admin-login.html";
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: "অর্ডার পাওয়া যায়নি"
+            });
+        }
 
-        return false;
-    }
-}
+        // ================= CANCEL ORDER =================
 
-// ================= START =================
+        if (
+            status === "cancelled" &&
+            order.status !== "cancelled"
+        ) {
 
-(async function () {
+            // Delivered Order Cancel করা যাবে না
+            if (order.status === "delivered") {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Delivered Order Cancel করা যাবে না।"
+                });
+            }
 
-    const loggedIn = await checkAdminLogin();
+            // Order-এর Products Stock ফেরত দিন
+            if (Array.isArray(order.products)) {
 
-    if (!loggedIn) return;
+                for (const item of order.products) {
 
-    loadProducts();
-    loadOrders();
-    loadAdminVideos();
+                    const productId =
+                        Number(item.id ?? item.productId);
 
-})();
+                    const quantity =
+                        Number(item.quantity || 1);
 
+                    const product =
+                        products.find(
+                            p => Number(p.id) === productId
+                        );
 
-// ================= NEW ORDER NOTIFICATION =================
+                    if (product) {
 
-let previousOrderCount = 0;
+                        product.stock =
+                            Number(product.stock) + quantity;
 
-async function checkNewOrders() {
+                        console.log(
+                            `🔄 Stock ফেরত: ${product.name} +${quantity}`
+                        );
 
-    try {
+                    }
+                }
 
-        const response =
-            await fetch("/api/orders");
+                // Products Save
+                saveProducts();
+            }
 
-        const data =
-            await response.json();
+            // Order Status Cancelled
+            order.status = "cancelled";
 
-        if (!data.success) return;
+            // Orders Save
+            saveOrders();
 
-        const orders = data.orders;
-
-        const pendingCount =
-            orders.filter(
-                order => order.status === "pending"
-            ).length;
-
-        document.getElementById(
-            "newOrderCount"
-        ).textContent = pendingCount;
-
-        const notification =
-            document.getElementById(
-                "newOrderNotification"
+            console.log(
+                "❌ Order Cancelled:",
+                order.orderId
             );
 
-        if (pendingCount > 0) {
-
-            notification.style.display = "block";
-
-        } else {
-
-            notification.style.display = "none";
-
-        }
-
-        previousOrderCount = orders.length;
-
-    } catch (error) {
-
-        console.error(
-            "Notification Error:",
-            error
-        );
-
-    }
-
-}
-
-
-// ================= GO TO ORDERS =================
-
-function goToOrders() {
-
-    const ordersSection =
-        document.querySelector(
-            ".orders-box"
-        );
-
-    if (ordersSection) {
-
-        ordersSection.scrollIntoView({
-            behavior: "smooth"
-        });
-
-    }
-
-}
-
-
-// প্রতি 10 সেকেন্ডে নতুন Order check করবে
-
-setInterval(
-    checkNewOrders,
-    10000
-);
-
-checkNewOrders();
-
-function callCustomer(phone) {
-    if (!phone) {
-        alert("❌ Customer-এর ফোন নম্বর পাওয়া যায়নি।");
-        return;
-    }
-
-    window.location.href = "tel:" + phone;
-}
-
-function whatsappCustomer(phone) {
-    if (!phone) {
-        alert("❌ Customer-এর ফোন নম্বর পাওয়া যায়নি।");
-        return;
-    }
-
-    let number = phone.replace(/\D/g, "");
-
-    if (number.startsWith("0")) {
-        number = "88" + number;
-    }
-
-    window.open(
-        "https://wa.me/" + number,
-        "_blank"
-    );
-}
-function copyOrderId(orderId) {
-    navigator.clipboard.writeText(orderId)
-        .then(() => {
-            alert("✅ Order ID Copy হয়েছে:\n" + orderId);
-        })
-        .catch(() => {
-            alert("❌ Order ID Copy করা যায়নি।");
-        });
-}
-
-function printOrder(orderId) {
-
-    const orderData = window.currentOrders?.find(
-        order => order.orderId === orderId
-    );
-
-    if (!orderData) {
-        alert("❌ Order data পাওয়া যায়নি।");
-        return;
-    }
-
-    const products = Array.isArray(orderData.products)
-        ? orderData.products
-        : [];
-
-    const productsHTML = products.map(item => {
-
-        const name = item.name || "পণ্য";
-        const price = Number(item.price) || 0;
-        const quantity = Number(item.quantity) || 1;
-        const subtotal = price * quantity;
-
-        return `
-            <div class="receipt-product">
-                <div class="receipt-product-name">
-                    ${name}
-                </div>
-
-                <div class="receipt-product-price">
-                    ৳ ${price.toLocaleString("en-BD")}
-                    × ${quantity}
-                    =
-                    <strong>
-                        ৳ ${subtotal.toLocaleString("en-BD")}
-                    </strong>
-                </div>
-            </div>
-        `;
-    }).join("");
-
-    const total = Number(orderData.total) || 0;
-
-    const printWindow = window.open(
-        "",
-        "_blank",
-        "width=700,height=800"
-    );
-
-    if (!printWindow) {
-        alert("❌ Print window খুলতে পারেনি। Browser popup allow করুন।");
-        return;
-    }
-
-    printWindow.document.write(`
-        <!DOCTYPE html>
-        <html lang="bn">
-        <head>
-            <meta charset="UTF-8">
-
-            <title>
-                Receipt - ${orderData.orderId}
-            </title>
-
-            <style>
-
-                body {
-                    font-family:
-                        Arial,
-                        "Noto Sans Bengali",
-                        sans-serif;
-
-                    padding: 30px;
-                    color: #333;
-                    background: #fff;
-                }
-
-                .receipt {
-                    max-width: 600px;
-                    margin: auto;
-                }
-
-                .header {
-                    text-align: center;
-                    border-bottom: 2px solid #d4145a;
-                    padding-bottom: 15px;
-                    margin-bottom: 20px;
-                }
-
-                .header h1 {
-                    margin: 0;
-                    color: #d4145a;
-                    font-size: 28px;
-                }
-
-                .header p {
-                    margin: 5px 0;
-                }
-
-                .info {
-                    margin-bottom: 20px;
-                    line-height: 1.8;
-                }
-
-                .products {
-                    margin-top: 15px;
-                }
-
-                .receipt-product {
-                    padding: 12px 0;
-                    border-bottom: 1px solid #ddd;
-                }
-
-                .receipt-product-name {
-                    font-weight: bold;
-                    font-size: 16px;
-                    margin-bottom: 5px;
-                }
-
-                .receipt-product-price {
-                    font-size: 14px;
-                    color: #555;
-                }
-
-                .receipt-product-price strong {
-                    color: #d4145a;
-                }
-
-                .total {
-                    text-align: right;
-                    font-size: 20px;
-                    font-weight: bold;
-                    color: #d4145a;
-                    margin-top: 20px;
-                    padding-top: 15px;
-                    border-top: 2px solid #333;
-                }
-
-                .thanks {
-                    text-align: center;
-                    margin-top: 35px;
-                    color: #555;
-                }
-
-                .print-btn {
-                    display: block;
-                    margin: 25px auto;
-                    padding: 10px 25px;
-                    background: #d4145a;
-                    color: white;
-                    border: none;
-                    border-radius: 6px;
-                    cursor: pointer;
-                    font-size: 16px;
-                }
-
-                @media print {
-                    .print-btn {
-                        display: none;
-                    }
-
-                    body {
-                        padding: 10px;
-                    }
-                }
-
-            </style>
-        </head>
-
-        <body>
-
-            <div class="receipt">
-
-                <div class="header">
-
-                    <h1>🌸 SR সাজঘর</h1>
-
-                    <p>
-                        Fashion & Beauty
-                    </p>
-
-                    <p>
-                        আপনার পছন্দ, আমাদের দায়িত্ব ❤️
-                    </p>
-
-                </div>
-
-                <div class="info">
-
-                    <strong>📦 Order ID:</strong>
-                    ${orderData.orderId}
-
-                    <br>
-
-                    <strong>👤 নাম:</strong>
-                    ${orderData.name || ""}
-
-                    <br>
-
-                    <strong>📱 ফোন:</strong>
-                    ${orderData.phone || ""}
-
-                    <br>
-
-                    <strong>🏠 ঠিকানা:</strong>
-                    ${orderData.address || ""}
-
-                    <br>
-
-                    <strong>📝 নোট:</strong>
-                    ${orderData.note || "নেই"}
-
-                </div>
-
-                <h3>🛍️ পণ্যসমূহ</h3>
-
-                <div class="products">
-                    ${productsHTML}
-                </div>
-
-                <div class="total">
-                    মোট:
-                    ৳ ${total.toLocaleString("en-BD")}
-                </div>
-
-                <div class="thanks">
-
-                    ধন্যবাদ আমাদের সাথে কেনাকাটা করার জন্য। ❤️
-
-                    <br><br>
-
-                    SR Sajghor Fashion & Beauty
-
-                </div>
-
-                <button
-                    class="print-btn"
-                    onclick="window.print()"
-                >
-                    🖨️ Print
-                </button>
-
-            </div>
-
-        </body>
-        </html>
-    `);
-
-    printWindow.document.close();
-}
-</script>
-
-<!-- ================= VIDEO MANAGEMENT ================= -->
-
-<section style="
-    margin:30px 0;
-    padding:25px;
-    background:#fff8fc;
-    border:1px solid #f2dce9;
-    border-radius:18px;
-    box-shadow:0 8px 25px rgba(120,30,90,0.08);
-">
-
-    <h2 style="
-        color:#d4145a;
-        margin-bottom:20px;
-    ">
-        🎬 Video Management
-    </h2>
-
-    <form id="videoUploadForm">
-
-        <label style="
-            display:block;
-            margin-bottom:8px;
-            font-weight:bold;
-        ">
-            ভিডিও নির্বাচন করুন
-        </label>
-
-        <label style="
-    display:block;
-    margin-bottom:8px;
-    font-weight:bold;
-">
-    🛍️ Product Name
-</label>
-
-<input
-    type="text"
-    id="videoProductName"
-    placeholder="যেমন: ডিজাইনার থ্রি-পিস"
-    required
-    style="
-        width:100%;
-        padding:12px;
-        margin-bottom:15px;
-        border:1px solid #ddd;
-        border-radius:8px;
-        box-sizing:border-box;
-    "
->
-
-<label style="
-    display:block;
-    margin-bottom:8px;
-    font-weight:bold;
-">
-    💰 Product Price
-</label>
-
-<input
-    type="number"
-    id="videoProductPrice"
-    placeholder="যেমন: 1200"
-    required
-    style="
-        width:100%;
-        padding:12px;
-        margin-bottom:15px;
-        border:1px solid #ddd;
-        border-radius:8px;
-        box-sizing:border-box;
-    "
->
-
-        <input
-            type="file"
-            id="videoFile"
-            accept="video/mp4,video/webm,video/ogg"
-            required
-            style="
-                display:block;
-                margin-bottom:15px;
-            "
-        >
-
-        <button
-            type="submit"
-            style="
-                padding:12px 22px;
-                border:none;
-                border-radius:10px;
-                background:linear-gradient(
-                    135deg,
-                    #d4145a,
-                    #8e2de2
-                );
-                color:white;
-                font-weight:bold;
-                cursor:pointer;
-            "
-        >
-            ⬆️ Upload Video
-        </button>
-
-    </form>
-
-    <p
-        id="videoUploadMessage"
-        style="
-            margin-top:15px;
-            font-weight:bold;
-        "
-    ></p>
-
-    <!-- ================= UPLOADED VIDEO LIST ================= -->
-
-<div id="adminVideoList" style="
-    margin-top:20px;
-    padding:15px;
-    background:white;
-    border-radius:12px;
-    border:1px solid #eee;
-">
-    <p>⏳ ভিডিও লোড হচ্ছে...</p>
-</div> 
-
-</section>
-
-<script>
-
-async function checkAdminLogin() {
-
-    try {
-
-        const response =
-            await fetch("/api/admin/check");
-
-        if (!response.ok) {
-
-            window.location.href =
-                "/admin-login.html";
-
-            return false;
-        }
-
-        return true;
-
-    } catch (error) {
-
-        window.location.href =
-            "/admin-login.html";
-
-        return false;
-    }
-} 
-
-// ================= VIDEO LIST =================
-
-async function loadAdminVideos() {
-
-    const list = document.getElementById("adminVideoList");
-
-    try {
-
-        const response = await fetch("/api/videos");
-        const data = await response.json();
-
-        if (!data.success || data.videos.length === 0) {
-
-            list.innerHTML =
-                "<p>📭 এখনো কোনো ভিডিও Upload করা হয়নি।</p>";
+            res.json({
+                success: true,
+                message:
+                    "Order Cancel হয়েছে এবং Stock automatically ফেরত দেওয়া হয়েছে।",
+                order: order
+            });
 
             return;
         }
 
-        list.innerHTML = "<h3>📂 Uploaded Videos</h3>";
 
-        data.videos.forEach(function(video) {
+       // ================= NORMAL STATUS UPDATE =================
 
-            const item = document.createElement("div");
+const oldStatus = order.status;
 
-            item.style.cssText = `
-                display:flex;
-                align-items:center;
-                gap:15px;
-                padding:12px;
-                margin-top:10px;
-                border:1px solid #eee;
-                border-radius:10px;
-                background:#fff8fc;
-            `;
+order.status = status;
 
-            item.innerHTML = `
-                <span style="flex:1;">
-                    🎬 ${video.productName || video.name || "ভিডিও"}
-                    ${
-                        video.productPrice
-                            ? `<br><small style="color:#d4145a;">💰 ৳ ${Number(video.productPrice).toLocaleString("en-BD")}</small>`
-                            : ""
-                    }
-                </span>
 
-                <button
-                    onclick="deleteVideo('${video.name || video.filename}')"
-                    style="
-                        background:#e53935;
-                        color:white;
-                        border:0;
-                        padding:8px 14px;
-                        border-radius:7px;
-                        cursor:pointer;
-                    "
-                >
-                    🗑️ Delete
-                </button>
-            `;
+// ================= CUSTOMER NOTIFICATION =================
 
-            list.appendChild(item);
+if (status === "confirmed" && oldStatus !== "confirmed") {
 
+    order.notification = {
+        message:
+            "🎉 আপনার অর্ডারটি Confirm করা হয়েছে। SR Sajghor Fashion & Beauty-এর পক্ষ থেকে ধন্যবাদ ❤️",
+        read: false,
+        createdAt: new Date().toISOString()
+    };
+
+}
+
+
+// ================= CANCEL NOTIFICATION =================
+
+if (status === "cancelled" && oldStatus !== "cancelled") {
+
+    order.notification = {
+        message:
+            "❌ আপনার অর্ডারটি Cancel করা হয়েছে। প্রয়োজনে আমাদের সাথে যোগাযোগ করুন।",
+        read: false,
+        createdAt: new Date().toISOString()
+    };
+
+}
+
+
+saveOrders();
+
+
+res.json({
+    success: true,
+    message:
+        "Order Status আপডেট হয়েছে এবং Customer Notification তৈরি হয়েছে।",
+    order: order
+});
+
+});  
+
+// ================= CUSTOMER ORDER STATUS =================
+
+app.get(
+    "/api/customer-order/:orderId",
+    (req, res) => {
+
+        const orderId =
+            req.params.orderId;
+
+        const order =
+            orders.find(
+                item =>
+                    item.orderId === orderId
+            );
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: "Order পাওয়া যায়নি"
+            });
+        }
+
+        // Customer-এর ব্যক্তিগত তথ্য পাঠাব না
+       res.json({
+    success: true,
+
+    order: {
+        orderId: order.orderId,
+        status: order.status,
+
+        notification:
+            order.notification || null,
+
+        products: Array.isArray(order.products)
+            ? order.products.map(item => ({
+                id: item.id ?? item.productId,
+                productId: item.productId ?? item.id
+            }))
+            : []
+    }
+});
+
+    }
+);
+
+// ================= DELETE ORDER =================
+
+app.delete(
+    "/api/orders/:orderId",
+    requireAdmin,
+    (req, res) => {
+
+        const orderId =
+            req.params.orderId;
+
+
+        const orderIndex =
+            orders.findIndex(
+                order =>
+                    order.orderId === orderId
+            );
+
+
+        if (orderIndex === -1) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "অর্ডার পাওয়া যায়নি"
+
+            });
+
+        }
+
+
+        orders.splice(
+            orderIndex,
+            1
+        );
+
+
+        saveOrders();
+
+
+        res.json({
+
+            success: true,
+
+            message:
+                "অর্ডার মুছে ফেলা হয়েছে"
+
+        });
+
+    }
+);
+
+// ================= CUSTOMER ACCOUNT SYSTEM =================
+
+const customersFile = path.join(__dirname, "customers.json");
+
+function loadCustomers() {
+
+    if (!fs.existsSync(customersFile)) {
+
+        fs.writeFileSync(
+            customersFile,
+            "[]",
+            "utf8"
+        );
+
+        return [];
+    }
+
+    try {
+
+        const data =
+            fs.readFileSync(
+                customersFile,
+                "utf8"
+            );
+
+        return JSON.parse(data);
+
+    } catch (error) {
+
+        console.error(
+            "❌ customers.json পড়া যায়নি:",
+            error
+        );
+
+        return [];
+    }
+}
+
+
+let customers = loadCustomers();
+
+
+function saveCustomers() {
+
+    fs.writeFileSync(
+        customersFile,
+        JSON.stringify(
+            customers,
+            null,
+            2
+        ),
+        "utf8"
+    );
+
+}
+
+
+// ================= PASSWORD HASH =================
+
+function hashPassword(password) {
+
+    const salt =
+        crypto.randomBytes(16).toString("hex");
+
+    const hash =
+        crypto
+            .scryptSync(
+                password,
+                salt,
+                64
+            )
+            .toString("hex");
+
+    return {
+        salt: salt,
+        hash: hash
+    };
+}
+
+
+// ================= CUSTOMER SIGNUP API =================
+
+app.post(
+    "/api/customer/signup",
+    (req, res) => {
+
+        try {
+
+            const {
+                name,
+                phone,
+                email,
+                password
+            } = req.body;
+
+
+            // ================= BASIC CHECK =================
+
+            if (
+                !name ||
+                !phone ||
+                !email ||
+                !password
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "সব তথ্য পূরণ করুন।"
+
+                });
+
+            }
+
+
+            // ================= PASSWORD CHECK =================
+
+            if (password.length < 6) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Password কমপক্ষে ৬ অক্ষরের হতে হবে।"
+
+                });
+
+            }
+
+
+            // ================= PHONE CHECK =================
+
+            if (
+                !/^01[3-9]\d{8}$/.test(phone)
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "সঠিক ১১ সংখ্যার মোবাইল নম্বর দিন।"
+
+                });
+
+            }
+
+
+            // ================= EMAIL CHECK =================
+
+            const normalizedEmail =
+                email.trim().toLowerCase();
+
+
+            // ================= DUPLICATE CHECK =================
+
+            const existingCustomer =
+                customers.find(
+                    customer =>
+                        customer.email ===
+                            normalizedEmail ||
+                        customer.phone ===
+                            phone
+                );
+
+
+            if (existingCustomer) {
+
+                return res.status(409).json({
+
+                    success: false,
+
+                    message:
+                        "এই Email অথবা Mobile Number দিয়ে Account আগে থেকেই আছে।"
+
+                });
+
+            }
+
+
+            // ================= PASSWORD HASH =================
+
+            const passwordData =
+                hashPassword(password);
+
+
+            // ================= CREATE CUSTOMER =================
+
+            const newCustomer = {
+
+                customerId:
+                    "CUS" + Date.now(),
+
+                name:
+                    name.trim(),
+
+                phone:
+                    phone,
+
+                email:
+                    normalizedEmail,
+
+                passwordHash:
+                    passwordData.hash,
+
+                passwordSalt:
+                    passwordData.salt,
+
+                createdAt:
+                    new Date().toISOString()
+
+            };
+
+
+            // ================= SAVE =================
+
+            customers.push(
+                newCustomer
+            );
+
+            saveCustomers();
+
+
+            console.log(
+                "✅ নতুন Customer Account তৈরি হয়েছে:",
+                newCustomer.customerId
+            );
+
+
+            // ================= RESPONSE =================
+
+            res.status(201).json({
+
+                success: true,
+
+                message:
+                    "🎉 Customer Account সফলভাবে তৈরি হয়েছে!",
+
+                customer: {
+
+                    customerId:
+                        newCustomer.customerId,
+
+                    name:
+                        newCustomer.name,
+
+                    phone:
+                        newCustomer.phone,
+
+                    email:
+                        newCustomer.email
+
+                }
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "❌ Customer Signup Error:",
+                error
+            );
+
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Account তৈরি করা যায়নি।"
+
+            });
+
+        }
+
+    }
+);
+
+// ================= CUSTOMER LOGIN SYSTEM =================
+
+function verifyPassword(password, salt, storedHash) {
+
+    const hash =
+        crypto
+            .scryptSync(
+                password,
+                salt,
+                64
+            )
+            .toString("hex");
+
+    return crypto.timingSafeEqual(
+        Buffer.from(hash, "hex"),
+        Buffer.from(storedHash, "hex")
+    );
+
+}
+
+
+// ================= CUSTOMER LOGIN API =================
+
+app.post(
+    "/api/customer/login",
+    (req, res) => {
+
+        try {
+
+            const {
+                login,
+                password
+            } = req.body;
+
+
+            // ================= BASIC CHECK =================
+
+            if (
+                !login ||
+                !password
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Email/Mobile এবং Password দিন।"
+
+                });
+
+            }
+
+
+            const normalizedLogin =
+                login.trim().toLowerCase();
+
+
+            // ================= FIND CUSTOMER =================
+
+            const customer =
+                customers.find(
+                    customer =>
+                        customer.email ===
+                            normalizedLogin ||
+                        customer.phone ===
+                            login.trim()
+                );
+
+
+            if (!customer) {
+
+                return res.status(401).json({
+
+                    success: false,
+
+                    message:
+                        "Email অথবা Mobile Number পাওয়া যায়নি।"
+
+                });
+
+            }
+
+
+            // ================= PASSWORD VERIFY =================
+
+            const passwordCorrect =
+                verifyPassword(
+                    password,
+                    customer.passwordSalt,
+                    customer.passwordHash
+                );
+
+
+            if (!passwordCorrect) {
+
+                return res.status(401).json({
+
+                    success: false,
+
+                    message:
+                        "Password সঠিক নয়।"
+
+                });
+
+            }
+
+
+            // ================= CUSTOMER SESSION =================
+
+            const customerToken =
+                crypto
+                    .randomBytes(32)
+                    .toString("hex");
+
+
+            // Customer session-এর জন্য
+            // temporary memory storage
+
+            if (
+                !global.customerSessions
+            ) {
+
+                global.customerSessions =
+                    new Map();
+
+            }
+
+
+            global.customerSessions.set(
+                customerToken,
+                customer.customerId
+            );
+
+
+            // ================= COOKIE =================
+
+            res.cookie(
+                "customerToken",
+                customerToken,
+                {
+
+                    httpOnly: true,
+
+                    sameSite: "lax",
+
+                    secure:
+                        process.env.NODE_ENV ===
+                        "production",
+
+                    maxAge:
+                        7 * 24 * 60 * 60 * 1000
+
+                }
+            );
+
+
+            // ================= SUCCESS =================
+
+            console.log(
+                "✅ Customer Login:",
+                customer.customerId
+            );
+
+
+            res.json({
+
+                success: true,
+
+                message:
+                    "Customer Login সফল হয়েছে!",
+
+                customer: {
+
+                    customerId:
+                        customer.customerId,
+
+                    name:
+                        customer.name,
+
+                    phone:
+                        customer.phone,
+
+                    email:
+                        customer.email
+
+                }
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "❌ Customer Login Error:",
+                error
+            );
+
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Login করা যায়নি।"
+
+            });
+
+        }
+
+    }
+);
+
+// ================= CUSTOMER LOGOUT API =================
+
+app.post(
+    "/api/customer/logout",
+    (req, res) => {
+
+        try {
+
+            const token =
+                req.cookies.customerToken;
+
+            if (token && global.customerSessions) {
+
+                global.customerSessions.delete(token);
+
+            }
+
+            res.clearCookie(
+                "customerToken",
+                {
+                    httpOnly: true,
+                    sameSite: "lax",
+                    secure:
+                        process.env.NODE_ENV ===
+                        "production"
+                }
+            );
+
+            res.json({
+
+                success: true,
+
+                message:
+                    "Customer Logout সফল হয়েছে!"
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "❌ Customer Logout Error:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Logout করা যায়নি।"
+
+            });
+
+        }
+
+    }
+);
+
+// ================= CUSTOMER MY ORDERS API =================
+
+app.get(
+    "/api/customer/orders",
+    (req, res) => {
+
+        try {
+
+            const token =
+                req.cookies.customerToken;
+
+            if (!token || !global.customerSessions) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Customer Login করা নেই।"
+                });
+
+            }
+
+            const customerId =
+                global.customerSessions.get(token);
+
+            if (!customerId) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Session expired। আবার Login করুন।"
+                });
+
+            }
+
+            const customer =
+                customers.find(
+                    customer =>
+                        customer.customerId ===
+                        customerId
+                );
+
+            if (!customer) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Customer পাওয়া যায়নি।"
+                });
+
+            }
+
+            const ordersFile =
+                path.join(__dirname, "orders.json");
+
+            let orders = [];
+
+            if (fs.existsSync(ordersFile)) {
+
+                try {
+
+                    orders =
+                        JSON.parse(
+                            fs.readFileSync(
+                                ordersFile,
+                                "utf8"
+                            )
+                        );
+
+                } catch (error) {
+
+                    orders = [];
+
+                }
+
+            }
+
+            const customerOrders =
+                orders.filter(order =>
+
+                    order.customerId ===
+                    customerId
+
+                );
+
+            res.json({
+
+                success: true,
+
+                orders:
+                    customerOrders
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "❌ Customer Orders Error:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Order History পাওয়া যায়নি।"
+
+            });
+
+        }
+
+    }
+);
+
+// ================= CUSTOMER PROFILE API =================
+
+app.get(
+    "/api/customer/me",
+    (req, res) => {
+
+        try {
+
+            const token =
+                req.cookies.customerToken;
+
+            if (!token) {
+
+                return res.status(401).json({
+                    success: false,
+                    message: "Customer Login করা নেই।"
+                });
+
+            }
+
+            if (!global.customerSessions) {
+
+                return res.status(401).json({
+                    success: false,
+                    message: "Session পাওয়া যায়নি।"
+                });
+
+            }
+
+            const customerId =
+                global.customerSessions.get(token);
+
+            if (!customerId) {
+
+                return res.status(401).json({
+                    success: false,
+                    message: "Session expired। আবার Login করুন।"
+                });
+
+            }
+
+            const customer =
+                customers.find(
+                    customer =>
+                        customer.customerId ===
+                        customerId
+                );
+
+            if (!customer) {
+
+                return res.status(404).json({
+                    success: false,
+                    message: "Customer পাওয়া যায়নি।"
+                });
+
+            }
+
+            res.json({
+
+                success: true,
+
+                customer: {
+
+                    customerId:
+                        customer.customerId,
+
+                    name:
+                        customer.name,
+
+                    phone:
+                        customer.phone,
+
+                    email:
+                        customer.email
+
+                }
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "❌ Customer Profile Error:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Customer তথ্য পাওয়া যায়নি।"
+            });
+
+        }
+
+    }
+);
+
+// ================= CUSTOMER PROFILE UPDATE API =================
+
+app.put(
+    "/api/customer/profile",
+    (req, res) => {
+
+        try {
+
+            const token =
+                req.cookies.customerToken;
+
+            if (
+                !token ||
+                !global.customerSessions
+            ) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Customer Login করা নেই।"
+                });
+            }
+
+            const customerId =
+                global.customerSessions.get(token);
+
+            if (!customerId) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Session expired। আবার Login করুন।"
+                });
+            }
+
+            const customer =
+                customers.find(
+                    customer =>
+                        customer.customerId ===
+                        customerId
+                );
+
+            if (!customer) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Customer পাওয়া যায়নি।"
+                });
+            }
+
+
+            const {
+                name,
+                email
+            } = req.body;
+
+
+            if (!name || !email) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Name এবং Email পূরণ করুন।"
+                });
+            }
+
+
+            const normalizedEmail =
+                email.trim().toLowerCase();
+
+
+            const emailExists =
+                customers.some(
+                    otherCustomer =>
+                        otherCustomer.customerId !==
+                            customerId &&
+                        otherCustomer.email ===
+                            normalizedEmail
+                );
+
+
+            if (emailExists) {
+
+                return res.status(409).json({
+                    success: false,
+                    message:
+                        "এই Email দিয়ে অন্য একটি Account আছে।"
+                });
+            }
+
+
+            customer.name =
+                name.trim();
+
+            customer.email =
+                normalizedEmail;
+
+
+            saveCustomers();
+
+
+            console.log(
+                "✅ Customer Profile Updated:",
+                customer.customerId
+            );
+
+
+            res.json({
+
+                success: true,
+
+                message:
+                    "Profile সফলভাবে Update হয়েছে!",
+
+                customer: {
+
+                    customerId:
+                        customer.customerId,
+
+                    name:
+                        customer.name,
+
+                    phone:
+                        customer.phone,
+
+                    email:
+                        customer.email
+
+                }
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "❌ Customer Profile Update Error:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Profile Update করা যায়নি।"
+
+            });
+
+        }
+
+    }
+);
+
+
+// ================= CUSTOMER ADDRESS API =================
+
+// Customer-এর Address List দেখা
+app.get(
+    "/api/customer/addresses",
+    (req, res) => {
+
+        try {
+
+            const token =
+                req.cookies.customerToken;
+
+            if (
+                !token ||
+                !global.customerSessions
+            ) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Customer Login করা নেই।"
+                });
+            }
+
+            const customerId =
+                global.customerSessions.get(token);
+
+            if (!customerId) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Session expired। আবার Login করুন।"
+                });
+            }
+
+            const customer =
+                customers.find(
+                    customer =>
+                        customer.customerId ===
+                        customerId
+                );
+
+            if (!customer) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Customer পাওয়া যায়নি।"
+                });
+            }
+
+            res.json({
+                success: true,
+                addresses:
+                    customer.addresses || []
+            });
+
+        } catch (error) {
+
+            console.error(
+                "❌ Customer Address Error:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Address পাওয়া যায়নি।"
+            });
+        }
+    }
+);
+
+
+// ================= ADD CUSTOMER ADDRESS =================
+
+app.post(
+    "/api/customer/addresses",
+    (req, res) => {
+
+        try {
+
+            const token =
+                req.cookies.customerToken;
+
+            if (
+                !token ||
+                !global.customerSessions
+            ) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Customer Login করা নেই।"
+                });
+            }
+
+            const customerId =
+                global.customerSessions.get(token);
+
+            if (!customerId) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Session expired। আবার Login করুন।"
+                });
+            }
+
+            const customer =
+                customers.find(
+                    customer =>
+                        customer.customerId ===
+                        customerId
+                );
+
+            if (!customer) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Customer পাওয়া যায়নি।"
+                });
+            }
+
+
+            const {
+                label,
+                address
+            } = req.body;
+
+
+            if (!address || !address.trim()) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Delivery Address লিখুন।"
+                });
+            }
+
+
+            if (!customer.addresses) {
+                customer.addresses = [];
+            }
+
+
+            const newAddress = {
+
+                id:
+                    "ADDR" +
+                    Date.now(),
+
+                label:
+                    label &&
+                    label.trim()
+                        ? label.trim()
+                        : "Home",
+
+                address:
+                    address.trim(),
+
+                createdAt:
+                    new Date().toISOString()
+
+            };
+
+
+            customer.addresses.push(
+                newAddress
+            );
+
+
+            saveCustomers();
+
+
+            res.status(201).json({
+
+                success: true,
+
+                message:
+                    "✅ Delivery Address যোগ হয়েছে!",
+
+                address:
+                    newAddress
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "❌ Add Address Error:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Address যোগ করা যায়নি।"
+
+            });
+
+        }
+
+    }
+);
+
+
+// ================= PRODUCT REVIEWS =================
+
+const reviewsFile = path.join(__dirname, "reviews.json");
+
+app.post("/api/reviews", (req, res) => {
+
+    try {
+
+        const {
+            productId,
+            productName,
+            rating,
+            review
+        } = req.body;
+
+        if (!productId || !rating || !review) {
+            return res.status(400).json({
+                success: false,
+                message: "সব তথ্য দিতে হবে।"
+            });
+        }
+
+        let reviews = [];
+
+        if (fs.existsSync(reviewsFile)) {
+            reviews = JSON.parse(
+                fs.readFileSync(reviewsFile, "utf8")
+            );
+        }
+
+        const newReview = {
+            id: Date.now(),
+            productId: productId,
+            productName: productName || "",
+            rating: Number(rating),
+            review: review,
+            createdAt: new Date().toISOString()
+        };
+
+        reviews.push(newReview);
+
+        fs.writeFileSync(
+            reviewsFile,
+            JSON.stringify(reviews, null, 2),
+            "utf8"
+        );
+
+        res.json({
+            success: true,
+            message: "Review সফলভাবে Save হয়েছে!",
+            review: newReview
         });
 
     } catch (error) {
 
-        console.error(error);
+        console.error("Review Save Error:", error);
 
-        list.innerHTML =
-            "<p>❌ ভিডিও লোড করা যাচ্ছে না।</p>";
+        res.status(500).json({
+            success: false,
+            message: "Review Save করা যায়নি।"
+        });
     }
-}
+});
+
+// ================= GET PRODUCT REVIEWS =================
+
+app.get("/api/reviews/:productId", (req, res) => {
+    try {
+        const productId = String(req.params.productId);
+
+        let reviews = [];
+
+        if (fs.existsSync(reviewsFile)) {
+            reviews = JSON.parse(
+                fs.readFileSync(reviewsFile, "utf8")
+            );
+        }
+
+        const productReviews = reviews.filter(
+            review => String(review.productId) === productId
+        );
+
+        res.json({
+            success: true,
+            reviews: productReviews
+        });
+
+    } catch (error) {
+        console.error("Get Reviews Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Review পাওয়া যায়নি।"
+        });
+    }
+});
+
+
+// ================= GET VIDEOS =================
+
+app.get("/api/videos", (req, res) => {
+    res.json({
+        success: true,
+        videos: videos
+    });
+});
 
 
 // ================= DELETE VIDEO =================
 
-async function deleteVideo(filename) {
+app.delete("/api/videos/:filename", requireAdmin, (req, res) => {
 
-    const confirmDelete =
-        confirm("এই ভিডিওটি Delete করতে চান?");
 
-    if (!confirmDelete) return;
+    const filename = path.basename(req.params.filename);
+    const filePath = path.join(videoDir, filename);
 
-    try {
+    fs.unlink(filePath, (err) => {
 
-        const response = await fetch(
-            "/api/videos/" + encodeURIComponent(filename),
-            {
-                method: "DELETE"
-            }
-        );
-
-        const data = await response.json();
-
-        if (data.success) {
-
-            alert("✅ ভিডিও Delete হয়েছে");
-
-            loadAdminVideos();
-
-        } else {
-
-            alert("❌ " + data.message);
-
+        if (err) {
+            return res.status(404).json({
+                success: false,
+                message: "ভিডিও পাওয়া যায়নি"
+            });
         }
 
-    } catch (error) {
+        // videos.json থেকেও ভিডিওটি বাদ দেওয়া
+        videos = videos.filter(function(video) {
+            return video.name !== filename;
+        });
 
-        console.error(error);
+        saveVideos();
 
-        alert(
-            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না"
-        );
-    }
-}
+        res.json({
+            success: true,
+            message: "ভিডিও সফলভাবে Delete হয়েছে"
+        });
+    });
+});
 
 
-// ================= LOAD VIDEOS =================
+// ================= SERVER =================
 
-loadAdminVideos();
+const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log("=================================");
+    console.log("✅ SR Sajghor Server চালু হয়েছে!");
+    console.log("🌐 Server চলছে");
+    console.log("PORT:", PORT);
+    console.log("=================================");
+});
 
-// ================= VIDEO UPLOAD =================
+server.on("error", (err) => {
+    console.error("❌ Server Error:", err);
+});
 
-const videoUploadForm =
-    document.getElementById("videoUploadForm");
+process.on("uncaughtException", (err) => {
+    console.error("❌ Uncaught Exception:", err);
+});
 
-videoUploadForm.addEventListener(
-    "submit",
-    async function(event) {
-
-        event.preventDefault();
-
-        const videoFile =
-            document.getElementById("videoFile").files[0];
-
-        const message =
-            document.getElementById("videoUploadMessage");
-
-        if (!videoFile) {
-
-            message.textContent =
-                "⚠️ আগে একটি ভিডিও নির্বাচন করুন।";
-
-            return;
-        }
-
-        const formData =
-            new FormData();
-
-        formData.append(
-            "video",
-            videoFile
-        );
-
-        const productName =
-    document.getElementById("videoProductName").value;
-
-const productPrice =
-    document.getElementById("videoProductPrice").value;
-
-formData.append(
-    "productName",
-    productName
-);
-
-formData.append(
-    "productPrice",
-    productPrice
-);
-
-        message.textContent =
-            "⏳ ভিডিও Upload হচ্ছে...";
-
-        try {
-
-            const response =
-                await fetch(
-                    "/api/videos/upload",
-                    {
-                        method: "POST",
-                        body: formData
-                    }
-                );
-
-            const data =
-                await response.json();
-
-            if (!response.ok || !data.success) {
-
-                message.textContent =
-                    "❌ " +
-                    (data.message ||
-                    "ভিডিও Upload হয়নি।");
-
-                return;
-            }
-
-            message.textContent =
-                "✅ ভিডিও সফলভাবে Upload হয়েছে!";
-
-            videoUploadForm.reset();
-            loadAdminVideos();
-
-            console.log(
-                "Uploaded Video:",
-                data.video
-            );
-
-        } catch (error) {
-
-            console.error(error);
-
-            message.textContent =
-                "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।";
-
-        }
-
-    }
-);
-</script>
-
-</body>
-</html>
+process.on("unhandledRejection", (err) => {
+    console.error("❌ Unhandled Rejection:", err);
+});
