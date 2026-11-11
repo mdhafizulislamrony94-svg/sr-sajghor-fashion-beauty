@@ -1825,6 +1825,60 @@
     transform: scale(1.05);
 }
 
+/* ================= PRODUCT IMAGE GALLERY ================= */
+
+.product-gallery-main {
+    width: 100%;
+    height: 350px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background: #fff;
+    border-radius: 12px;
+}
+
+.product-gallery-main img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.product-gallery-thumbnails {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 12px 2px;
+    margin-top: 8px;
+}
+
+.gallery-thumb {
+    flex: 0 0 65px;
+    width: 65px;
+    height: 75px;
+    padding: 3px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+}
+
+.gallery-thumb.active {
+    border-color: #d4145a;
+}
+
+.gallery-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+@media (max-width: 600px) {
+    .product-gallery-main {
+        height: 280px;
+    }
+}
+
     </style>
 </head>
 
@@ -2243,170 +2297,162 @@ if (customerOrderId) {
 
         products.forEach(product => {
 
-           let imageHTML = "";
+        let imageHTML = "";
 
-if (product.image && product.image.trim() !== "") {
+        const firstImage =
+            (Array.isArray(product.images) && product.images.length > 0)
+                ? product.images[0]
+                : (product.image || "");
 
-    const imagePath =
-        product.image.startsWith("/uploads/")
-            ? product.image
-            : "/uploads/" + product.image.split("/").pop();
+        if (firstImage && firstImage.trim() !== "") {
 
-    imageHTML = `
-        <img
-            src="${imagePath}"
-            alt="${product.name}"
-            onerror="
-                console.error('Image load failed:', this.src);
-                this.style.display='none';
-                this.parentElement.innerHTML='<div class=no-image>🛍️</div>';
-            "
-        >
-    `;
+            const imagePath =
+                firstImage.startsWith("/uploads/")
+                    ? firstImage
+                    : "/uploads/" + firstImage.split("/").pop();
 
-} else {
-
-                let icon = "🛍️";
-
-                if (product.category === "Three Piece") {
-
-                    icon = "👗";
-
-                } else if (
-                    product.category === "Beauty"
-                ) {
-
-                    icon = "💄";
-
-                } else if (
-                    product.category === "Fashion"
-                ) {
-
-                    icon = "👜";
-
-                } else if (
-                    product.category === "Jewelry"
-                ) {
-
-                    icon = "💍";
-                }
-
-                imageHTML = `
-                    <div class="no-image">
-                        ${icon}
-                    </div>
-                `;
-            }
-
-
-            const productCard =
-                document.createElement("div");
-
-            productCard.className =
-                "product";
-
-
-            productCard.innerHTML = `
-
-                <div class="product-image">
-
-                    ${imageHTML}
-
-                </div>
-
-                    ${
-        customerOrder &&
-        customerOrder.status === "confirmed" &&
-        Array.isArray(customerOrder.products) &&
-        customerOrder.products.some(
-            item =>
-                Number(item.id ?? item.productId) ===
-                Number(product.id)
-        )
-        ? `
-            <div class="product-confirm-notification">
-                🔔 আপনার এই Product-এর অর্ডার Confirm হয়েছে! 🎉
-            </div>
-          `
-        : ""
-    }
-
-                <div class="product-info">
-
-                <button
-                     class="wishlist-btn"
-                    data-product-id="${product.id}"
-                    onclick='toggleWishlist(${JSON.stringify(product)})'>
-                    ❤️
-                </button>
-
-                    <h3>
-                        ${product.name}
-                    </h3>
-
-
-                    <div class="category-name">
-                        📂 ${product.category}
-                    </div>
-
-
-                    <p class="price">
-                        ৳ ${product.price}
-                    </p>
-
-
-                    <p class="description">
-                        ${product.description || ""}
-                    </p>
-
-
-<div style="display:flex; gap:8px; margin-top:15px;">
-
-    <button
-        class="order-btn"
-        style="margin-top:0;"
-        onclick='showProductDetails(${JSON.stringify(product)})'>
-        👁️ বিস্তারিত
-    </button>
-
-    <button
-        class="order-btn"
-        style="margin-top:0;"
-        onclick='orderProduct(${JSON.stringify(product)})'>
-        🛒 কার্টে
-    </button>
-
-</div>
-
-                </div>
+            imageHTML = `
+                <img
+                    src="${imagePath}"
+                    alt="${product.name}"
+                    onerror="
+                        console.error('Image load failed:', this.src);
+                        this.style.display='none';
+                        this.parentElement.innerHTML='<div class=no-image>🛍️</div>';
+                    "
+                >
             `;
 
+        } else {
 
-            productList.appendChild(
-                productCard
-            );
+            let icon = "🛍️";
 
-        });
+            if (product.category === "Three Piece") {
+                icon = "👗";
+            } else if (product.category === "Beauty") {
+                icon = "💄";
+            } else if (product.category === "Fashion") {
+                icon = "👜";
+            } else if (product.category === "Jewelry") {
+                icon = "💍";
+            }
 
-    } catch (error) {
+            imageHTML = `
+                <div class="no-image">
+                    ${icon}
+                </div>
+            `;
+        }
 
-        console.error(error);
 
-        productList.innerHTML = `
+                    const productCard =
+                        document.createElement("div");
 
-            <div class="loading">
+                    productCard.className =
+                        "product";
 
-                ❌ প্রোডাক্ট লোড করা যাচ্ছে না।
 
-                <br><br>
+                    productCard.innerHTML = `
 
-                Server চালু আছে কিনা দেখুন।
+                        <div class="product-image">
 
-            </div>
+                            ${imageHTML}
 
-        `;
-    }
-}
+                        </div>
+
+                            ${
+                customerOrder &&
+                customerOrder.status === "confirmed" &&
+                Array.isArray(customerOrder.products) &&
+                customerOrder.products.some(
+                    item =>
+                        Number(item.id ?? item.productId) ===
+                        Number(product.id)
+                )
+                ? `
+                    <div class="product-confirm-notification">
+                        🔔 আপনার এই Product-এর অর্ডার Confirm হয়েছে! 🎉
+                    </div>
+                `
+                : ""
+            }
+
+                        <div class="product-info">
+
+                        <button
+                            class="wishlist-btn"
+                            data-product-id="${product.id}"
+                            onclick='toggleWishlist(${JSON.stringify(product)})'>
+                            ❤️
+                        </button>
+
+                            <h3>
+                                ${product.name}
+                            </h3>
+
+
+                            <div class="category-name">
+                                📂 ${product.category}
+                            </div>
+
+
+                            <p class="price">
+                                ৳ ${product.price}
+                            </p>
+
+
+                            <p class="description">
+                                ${product.description || ""}
+                            </p>
+
+
+        <div style="display:flex; gap:8px; margin-top:15px;">
+
+            <button
+                class="order-btn"
+                style="margin-top:0;"
+                onclick='showProductDetails(${JSON.stringify(product)})'>
+                👁️ বিস্তারিত
+            </button>
+
+            <button
+                class="order-btn"
+                style="margin-top:0;"
+                onclick='orderProduct(${JSON.stringify(product)})'>
+                🛒 কার্টে
+            </button>
+
+        </div>
+
+                        </div>
+                    `;
+
+
+                    productList.appendChild(
+                        productCard
+                    );
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                productList.innerHTML = `
+
+                    <div class="loading">
+
+                        ❌ প্রোডাক্ট লোড করা যাচ্ছে না।
+
+                        <br><br>
+
+                        Server চালু আছে কিনা দেখুন।
+
+                    </div>
+
+                `;
+            }
+        }
 
 
 /* ================= ORDER ================= */
@@ -2960,6 +3006,26 @@ async function saveCustomerAddress() {
 
 document.addEventListener("DOMContentLoaded", function () {
 
+         const paymentMethodSelect = document.getElementById("paymentMethod");
+         const mobilePaymentDetails = document.getElementById("mobilePaymentDetails");
+         const paymentSenderPhoneInput = document.getElementById("paymentSenderPhone");
+         const transactionIdInput = document.getElementById("transactionId");
+
+         if (paymentMethodSelect) {
+             paymentMethodSelect.addEventListener("change", function () {
+                 const isCOD = this.value === "cod";
+
+                 mobilePaymentDetails.style.display =
+                     this.value && !isCOD ? "block" : "none";
+
+                 paymentSenderPhoneInput.required =
+                    this.value !== "" && !isCOD;
+
+                 transactionIdInput.required =
+                    this.value !== "" && !isCOD;
+             });
+        }
+        
     const orderForm =
         document.getElementById("orderForm");
 
@@ -2999,7 +3065,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const note =
             document.getElementById("customerNote").value.trim();
+        const 
+            paymentMethod = document.getElementById("paymentMethod").value;
+        const 
+            paymentSenderPhone = document.getElementById("paymentSenderPhone").value.trim();
+        const 
+            transactionId = document.getElementById("transactionId").value.trim();
 
+        if (!paymentMethod) {
+           alert("পেমেন্ট পদ্ধতি নির্বাচন করুন।");
+           return;
+        }
+
+         if (
+             paymentMethod !== "cod" &&
+             (!paymentSenderPhone || !transactionId)
+        ) {
+            alert("পেমেন্ট নম্বর ও Transaction ID লিখুন।");
+            return;
+        }
 
         // Cart check
 
@@ -3043,7 +3127,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         address: address,
 
                         note: note,
-
+                        paymentMethod: paymentMethod,
+                        paymentSenderPhone: paymentSenderPhone,
+                        transactionId: transactionId,
                         products: cart,
 
                         total: total
@@ -3152,36 +3238,68 @@ function showProductDetails(product) {
         product.description || "কোনো Description নেই।";
 
 
-    // Product Image
-    if (product.image && product.image.trim() !== "") {
+// ================= PRODUCT IMAGE GALLERY =================
 
-       imageBox.innerHTML =
-         `<img src="${
-             product.image.startsWith("/uploads/")
-                 ? product.image
-                 : "/uploads/" + product.image
-         }" alt="${product.name}">`;
+let productImages = [];
 
-    } else {
+if (Array.isArray(product.images) && product.images.length > 0) {
+    productImages = product.images.slice(0, 10);
+} else if (product.image) {
+    productImages = [product.image];
+}
 
-        let icon = "🛍️";
+productImages = productImages.map(img => {
+    return img.startsWith("/uploads/")
+        ? img
+        : "/uploads/" + img.split("/").pop();
+});
 
-        if (product.category === "Three Piece") {
-            icon = "👗";
-        }
-        else if (product.category === "Beauty") {
-            icon = "💄";
-        }
-        else if (product.category === "Fashion") {
-            icon = "👜";
-        }
-        else if (product.category === "Jewelry") {
-            icon = "💍";
-        }
+if (productImages.length > 0) {
 
-        imageBox.innerHTML =
-            `<div class="no-image">${icon}</div>`;
-    }
+    imageBox.innerHTML = `
+        <div class="product-gallery-main">
+            <img
+                id="productMainImage"
+                src="${productImages[0]}"
+                alt="${product.name}"
+            >
+        </div>
+
+        <div class="product-gallery-thumbnails">
+            ${productImages.map((img, index) => `
+                <button
+                    type="button"
+                    class="gallery-thumb ${index === 0 ? "active" : ""}"
+                    data-index="${index}"
+                >
+                    <img src="${img}" alt="ছবি ${index + 1}">
+                </button>
+            `).join("")}
+        </div>
+    `;
+
+    imageBox.querySelectorAll(".gallery-thumb").forEach(button => {
+
+        button.addEventListener("click", function() {
+
+            const index = Number(this.dataset.index);
+
+            document.getElementById("productMainImage").src =
+                productImages[index];
+
+            imageBox.querySelectorAll(".gallery-thumb")
+                .forEach(item => item.classList.remove("active"));
+
+            this.classList.add("active");
+        });
+
+    });
+
+} else {
+
+    imageBox.innerHTML =
+        `<div class="no-image">🛍️</div>`;
+}
 
 
     // Cart Button
@@ -3825,6 +3943,50 @@ loadProducts();
         </div>
 
 
+<!-- PAYMENT METHOD -->
+<div class="form-group">
+    <label>💳 পেমেন্ট পদ্ধতি নির্বাচন করুন</label>
+
+    <select id="paymentMethod" required>
+        <option value="">পেমেন্ট পদ্ধতি নির্বাচন করুন</option>
+        <option value="bkash">বিকাশ (bKash)</option>
+        <option value="nagad">নগদ (Nagad)</option>
+        <option value="rocket">রকেট (Rocket)</option>
+        <option value="cod">ক্যাশ অন ডেলিভারি (COD)</option>
+    </select>
+</div>
+
+<!-- MOBILE PAYMENT DETAILS -->
+<div id="mobilePaymentDetails" style="display:none; margin-top:12px; padding:15px; border:1px solid #ddd; border-radius:10px;">
+
+    <p style="margin-bottom:10px;">
+        📱 যে নম্বর থেকে টাকা পাঠিয়েছেন সেটি লিখুন:
+    </p>
+
+    <input
+        type="tel"
+        id="paymentSenderPhone"
+        placeholder="01XXXXXXXXX"
+        style="width:100%; padding:12px; margin-bottom:12px;"
+    >
+
+    <p style="margin-bottom:10px;">
+        🧾 Transaction ID লিখুন:
+    </p>
+
+    <input
+        type="text"
+        id="transactionId"
+        placeholder="আপনার Transaction ID"
+        style="width:100%; padding:12px;"
+    >
+
+    <p style="font-size:13px; color:#666; margin-top:10px;">
+        আপনার পেমেন্টের তথ্য যাচাই করে অর্ডার নিশ্চিত করা হবে।
+    </p>
+</div>
+
+
         <div class="order-summary">
 
             <h3>🛒 অর্ডারের তথ্য</h3>
@@ -4103,7 +4265,6 @@ function closeCustomerNotification() {
 
 }
 
-
 // ================= CHECK EVERY 5 SECONDS =================
 
 setInterval(
@@ -4111,13 +4272,11 @@ setInterval(
     5000
 );
 
-
 // ================= CHECK WHEN WEBSITE OPENS =================
 
 checkCustomerNotification();
 
 </script>
-
 
 </body>
 </html>
