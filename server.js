@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const path = require("path");
@@ -1245,6 +1246,62 @@ app.get("/api/orders", requireAdmin, (req, res) => {
 
 });
 
+// ================= ADMIN CUSTOMER ORDER HISTORY =================
+
+app.get(
+    "/api/admin/customers/:customerId/orders",
+    requireAdmin,
+    (req, res) => {
+
+        try {
+
+            const customerId = req.params.customerId;
+
+            const customer = customers.find(
+                item => item.customerId === customerId
+            );
+
+            if (!customer) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Customer not found"
+                });
+            }
+
+            const customerOrders = orders
+                .filter(order => order.customerId === customerId)
+                .sort((a, b) =>
+                    new Date(b.createdAt) - new Date(a.createdAt)
+                );
+
+            return res.json({
+                success: true,
+                customer: {
+                    customerId: customer.customerId,
+                    name: customer.name,
+                    phone: customer.phone
+                },
+                totalOrders: customerOrders.length,
+                orders: customerOrders
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Admin Customer Order History Error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message: "Could not load customer orders"
+            });
+
+        }
+
+    }
+);
+
 // ================= VERIFY ORDER PAYMENT =================
 
 app.put(
@@ -1601,6 +1658,200 @@ function loadCustomers() {
 
 let customers = loadCustomers();
 
+
+// ================= ADMIN CUSTOMER LIST API =================
+
+app.get("/api/admin/customers", requireAdmin, (req, res) => {
+
+    try {
+
+        const safeCustomers = customers.map(customer => ({
+            customerId: customer.customerId,
+            name: customer.name,
+            phone: customer.phone,
+            email: customer.email,
+            createdAt: customer.createdAt
+        }));
+
+        safeCustomers.sort((a, b) =>
+            new Date(b.createdAt) - new Date(a.createdAt)
+        );
+
+        res.json({
+            success: true,
+            totalCustomers: safeCustomers.length,
+            customers: safeCustomers
+        });
+
+    } catch (error) {
+
+        console.error("Admin customer list error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Could not load customer list"
+        });
+
+    }
+
+});
+
+// ================= ADMIN CUSTOMER BACKUP DOWNLOAD =================
+
+app.get("/api/admin/customers/backup", requireAdmin, (req, res) => {
+
+    res.download(customersFile, "customers-backup.json", (error) => {
+
+        if (error) {
+            console.error("Backup Download Error:", error);
+
+            if (!res.headersSent) {
+                res.status(500).json({
+                    success: false,
+                    message: "Backup download failed"
+                });
+            }
+        }
+
+    });
+
+});
+
+// ================= ADMIN CUSTOMER BACKUP RESTORE =================
+
+app.post("/api/admin/customers/restore", requireAdmin, (req, res) => {
+    try {
+        const restoredCustomers = req.body;
+
+        if (!Array.isArray(restoredCustomers)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid backup file"
+            });
+        }
+
+        if (restoredCustomers.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Empty backup cannot be restored"
+            });
+        }
+
+        if (restoredCustomers.length > 10000) {
+            return res.status(400).json({
+                success: false,
+                message: "Too many customer records"
+            });
+        }
+
+        const validCustomers = restoredCustomers.every(customer =>
+            customer &&
+            typeof customer === "object" &&
+            !Array.isArray(customer) &&
+            typeof customer.customerId === "string" &&
+            customer.customerId.trim() !== "" &&
+            typeof customer.name === "string" &&
+            customer.name.trim() !== "" &&
+            typeof customer.phone === "string" &&
+            typeof customer.email === "string" &&
+            typeof customer.passwordHash === "string" &&
+            typeof customer.passwordSalt === "string" &&
+            typeof customer.createdAt === "string"
+        );
+
+        if (!validCustomers) {
+            return res.status(400).json({
+                success: false,
+                message: "Backup data format is invalid"
+            });
+        }
+
+        const customerIds = restoredCustomers.map(
+            customer => customer.customerId
+        );
+
+        const customerEmails = restoredCustomers.map(
+            customer => customer.email.trim().toLowerCase()
+        );
+
+        if (
+            new Set(customerIds).size !== customerIds.length ||
+            new Set(customerEmails).size !== customerEmails.length
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Duplicate Customer ID or Email found"
+            });
+        }
+
+        const stamp = new Date()
+            .toISOString()
+            .replace(/[:.]/g, "-");
+
+        const backupFile = path.join(
+            __dirname,
+            `customers-before-restore-${stamp}.json`
+        );
+
+        fs.copyFileSync(customersFile, backupFile);
+
+        customers = restoredCustomers;
+
+        saveCustomers();
+
+        res.json({
+            success: true,
+            message: "Customer backup restored successfully"
+        });
+
+    } catch (error) {
+        console.error("Customer Restore Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Customer restore failed"
+        });
+    }
+});
+
+// ================= ADMIN DELETE CUSTOMER API =================
+
+app.delete(
+    "/api/admin/customers/:customerId",
+    requireAdmin,
+    (req, res) => {
+        try {
+            const customerId = req.params.customerId;
+
+            const customerIndex = customers.findIndex(
+                customer => customer.customerId === customerId
+            );
+
+            if (customerIndex === -1) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Customer not found"
+                });
+            }
+
+            customers.splice(customerIndex, 1);
+            saveCustomers();
+
+            res.json({
+                success: true,
+                message: "Customer deleted successfully"
+            });
+
+        } catch (error) {
+            console.error("Delete Customer Error:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Could not delete customer"
+            });
+        }
+    }
+);
 
 function saveCustomers() {
 

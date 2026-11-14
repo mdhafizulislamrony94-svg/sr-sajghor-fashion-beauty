@@ -1,0 +1,641 @@
+
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Management - SR Sajghor</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f5f3fa;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #d4145a, #8e2de2);
+            color: white;
+            padding: 25px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            margin: 0 0 8px;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 10px 16px;
+            background: white;
+            color: #8e2de2;
+            text-decoration: none;
+            border-radius: 7px;
+            font-weight: bold;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 12px #00000010;
+        }
+
+        .total {
+            font-size: 28px;
+            font-weight: bold;
+            color: #d4145a;
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+
+        th, td {
+            padding: 13px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f3eafa;
+            color: #6b21a8;
+        }
+
+        .message {
+            padding: 15px;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>👥 Customer Management</h1>
+        <p>SR Sajghor Fashion & Beauty</p>
+
+        <a href="/admin-panel.html" class="back-btn">
+            ← Admin Panel
+        </a>
+        <a href="/api/admin/customers/backup"
+           class="back-btn"
+           style="margin-left:10px; background:#198754; color:white;">
+            ⬇ Download Customer Backup
+        </a>
+
+        <input
+            type="file"
+            id="customerBackupFile"
+            accept=".json,application/json"
+            style="display:none;"
+            onchange="restoreCustomerBackup(event)"
+        >
+
+        <button
+            type="button"
+            class="back-btn"
+            onclick="document.getElementById('customerBackupFile').click()"
+            style="margin-left:10px; background:#0d6efd; color:white; border:0; cursor:pointer;"
+        >
+            ⬆ Restore Customer Backup
+        </button>
+    </div>
+
+    <div class="card">
+        <h3>মোট Registered Customer</h3>
+        <div class="total" id="totalCustomers">0</div>
+    </div>
+
+    <div class="card">
+        <h2>Customer List</h2>
+
+        <input
+            type="text"
+            id="searchInput"
+            placeholder="নাম, ফোন অথবা ইমেইল দিয়ে খুঁজুন..."
+        >
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Registration Date</th>
+                    </tr>
+                </thead>
+
+                <tbody id="customersTableBody">
+                    <tr>
+                        <td colspan="4" class="message">
+                            Loading Customers...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+let allCustomers = [];
+
+async function loadCustomers() {
+
+    const tableBody =
+        document.getElementById("customersTableBody");
+
+    try {
+
+        const response = await fetch(
+            "/api/admin/customers",
+            { credentials: "include" }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+
+            if (response.status === 401 || response.status === 403) {
+                window.location.href = "/admin-login.html";
+                return;
+            }
+
+            throw new Error("Customer loading failed");
+        }
+
+        allCustomers = data.customers || [];
+
+        document.getElementById("totalCustomers")
+            .textContent = data.totalCustomers ?? allCustomers.length;
+
+        renderCustomers(allCustomers);
+
+    } catch (error) {
+
+        console.error("Customer loading error:", error);
+
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="4" class="message">
+                    Customer List লোড করা যায়নি।
+                    আবার চেষ্টা করুন।
+                </td>
+            </tr>
+        `;
+    }
+}
+
+
+function renderCustomers(customers) {
+
+    const tableBody =
+        document.getElementById("customersTableBody");
+
+    tableBody.innerHTML = "";
+
+    if (customers.length === 0) {
+
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="message">
+                    কোনো Customer পাওয়া যায়নি।
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    customers.forEach(customer => {
+
+        const row = document.createElement("tr");
+
+        const values = [
+            customer.name || "-",
+            customer.phone || "-",
+            customer.email || "-",
+            customer.createdAt
+                ? new Date(customer.createdAt).toLocaleDateString("en-GB")
+                : "-"
+        ];
+
+        values.forEach(value => {
+
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.appendChild(cell);
+
+        });
+
+        // VIEW DETAILS BUTTON
+
+        const actionCell = document.createElement("td");
+
+        const viewButton = document.createElement("button");
+
+        viewButton.textContent = "View Details";
+
+        viewButton.style.cssText =
+            "padding:8px 12px;background:#8e2de2;color:white;border:0;border-radius:6px;cursor:pointer;";
+
+        viewButton.addEventListener("click", function () {
+            showCustomerDetails(customer.customerId);
+        });
+
+        actionCell.appendChild(viewButton);
+
+	const deleteButton = document.createElement("button");
+
+	deleteButton.textContent = "Delete";
+
+	deleteButton.style.cssText =
+        "padding:8px 12px;background:#dc3545;color:white;border:0;border-radius:6px;cursor:pointer;margin-left:6px;";
+
+	deleteButton.addEventListener("click", function () {
+        deleteCustomer(customer.customerId);
+	});
+
+	actionCell.appendChild(deleteButton);
+        row.appendChild(actionCell);
+
+        tableBody.appendChild(row);
+
+    });
+}
+
+
+// SHOW CUSTOMER DETAILS WITH ORDER HISTORY
+
+async function showCustomerDetails(customerId) {
+
+    const customer = allCustomers.find(
+        item => item.customerId === customerId
+    );
+
+    if (!customer) return;
+
+    const content =
+        document.getElementById("customerDetailsContent");
+
+    content.innerHTML = "";
+
+    const details = [
+        ["Customer ID", customer.customerId],
+        ["Name", customer.name],
+        ["Phone", customer.phone],
+        ["Email", customer.email],
+        ["Registration Date",
+            customer.createdAt
+                ? new Date(customer.createdAt).toLocaleString("en-GB")
+                : "-"
+        ]
+    ];
+
+    details.forEach(([label, value]) => {
+        const p = document.createElement("p");
+        p.textContent = label + ": " + (value || "-");
+        content.appendChild(p);
+    });
+
+    const heading = document.createElement("h3");
+    heading.textContent = "🛍️ Customer Order History";
+    heading.style.marginTop = "25px";
+    content.appendChild(heading);
+
+    const orderContainer = document.createElement("div");
+    orderContainer.textContent = "Loading Orders...";
+    content.appendChild(orderContainer);
+
+    document.getElementById("customerDetailsModal")
+        .style.display = "flex";
+
+    try {
+
+        const response = await fetch(
+            "/api/admin/customers/" +
+            encodeURIComponent(customerId) +
+            "/orders",
+            {
+                credentials: "include"
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            orderContainer.textContent =
+                data.message || "Order History load করা যায়নি।";
+            return;
+        }
+
+        orderContainer.innerHTML = "";
+
+        const count = document.createElement("p");
+        count.textContent =
+            "Total Orders: " + data.totalOrders;
+
+        orderContainer.appendChild(count);
+
+// CUSTOMER PURCHASE SUMMARY
+
+const totalPurchase = data.orders.reduce(
+    (sum, order) => sum + Number(order.total || 0),
+    0
+);
+
+const latestOrder = data.orders.length > 0
+    ? data.orders[0]
+    : null;
+
+const summary = document.createElement("div");
+
+summary.style.cssText =
+    "background:#fff0f6;padding:14px;margin:12px 0;border-radius:10px;border:1px solid #d4145a;";
+
+const summaryItems = [
+    "Total Orders: " + data.totalOrders,
+    "Total Purchase: ৳" + totalPurchase,
+    "Latest Order: " + (
+        latestOrder && latestOrder.createdAt
+            ? new Date(latestOrder.createdAt).toLocaleDateString("en-GB")
+            : "No Order Yet"
+    )
+];
+
+summaryItems.forEach(item => {
+    const p = document.createElement("p");
+    p.textContent = item;
+    p.style.margin = "6px 0";
+    summary.appendChild(p);
+});
+
+orderContainer.appendChild(summary);
+
+        if (data.orders.length === 0) {
+            const empty = document.createElement("p");
+            empty.textContent = "এই Customer-এর কোনো Order নেই।";
+            orderContainer.appendChild(empty);
+            return;
+        }
+
+        data.orders.forEach(order => {
+
+            const card = document.createElement("div");
+
+            card.style.cssText =
+                "border:1px solid #ddd;padding:12px;margin:10px 0;border-radius:8px;background:#fafafa;";
+
+            const orderInfo = [
+                "Order ID: " + (order.orderId || "-"),
+                "Date: " + (
+                    order.createdAt
+                        ? new Date(order.createdAt).toLocaleString("en-GB")
+                        : "-"
+                ),
+                "Total: ৳" + (order.total || 0),
+                "Status: " + (order.status || "-")
+            ];
+
+            orderInfo.forEach(info => {
+                const p = document.createElement("p");
+                p.textContent = info;
+                card.appendChild(p);
+            });
+
+            const productHeading =
+                document.createElement("strong");
+
+            productHeading.textContent = "Products:";
+            card.appendChild(productHeading);
+
+            (order.products || []).forEach(product => {
+
+                const p = document.createElement("p");
+
+                p.textContent =
+                    (product.name || "Product") +
+                    " × " + (product.quantity || 1);
+
+                card.appendChild(p);
+
+            });
+
+            orderContainer.appendChild(card);
+
+        });
+
+    } catch (error) {
+
+        console.error("Order History Error:", error);
+
+        orderContainer.textContent =
+            "Server-এর সাথে যোগাযোগ করা যাচ্ছে না।";
+
+    }
+
+}
+
+// DELETE CUSTOMER FUNCTION
+
+async function deleteCustomer(customerId) {
+
+    const confirmDelete = confirm(
+        "আপনি কি নিশ্চিত এই Customer-কে Delete করতে চান?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+
+        const response = await fetch(
+            "/api/admin/customers/" + encodeURIComponent(customerId),
+            {
+                method: "DELETE",
+                credentials: "include"
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            alert(data.message || "Customer Delete করা যায়নি");
+            return;
+        }
+
+        alert("Customer সফলভাবে Delete হয়েছে");
+
+        await loadCustomers();
+
+    } catch (error) {
+
+        console.error("Delete Customer Error:", error);
+
+        alert("Server-এর সাথে যোগাযোগ করা যাচ্ছে না");
+
+    }
+}
+
+
+// CLOSE CUSTOMER DETAILS
+
+function closeCustomerDetails() {
+
+    document.getElementById("customerDetailsModal")
+        .style.display = "none";
+}
+
+
+document.getElementById("searchInput")
+    .addEventListener("input", function () {
+
+        const searchText =
+            this.value.toLowerCase().trim();
+
+        const filteredCustomers = allCustomers.filter(customer => {
+
+            return (
+                (customer.name || "").toLowerCase().includes(searchText) ||
+                (customer.phone || "").toLowerCase().includes(searchText) ||
+                (customer.email || "").toLowerCase().includes(searchText)
+            );
+
+        });
+
+        renderCustomers(filteredCustomers);
+
+    });
+
+loadCustomers();
+
+// ================= CUSTOMER BACKUP RESTORE =================
+
+async function restoreCustomerBackup(event) {
+
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    try {
+
+        const text = await file.text();
+        const backupData = JSON.parse(text);
+
+        if (!Array.isArray(backupData) || backupData.length === 0) {
+            alert("Backup file সঠিক নয় অথবা খালি!");
+            return;
+        }
+
+        const confirmed = confirm(
+            "সতর্কতা!\n\nবর্তমান Customer Data পরিবর্তন হবে।\nRestore করার আগে Server স্বয়ংক্রিয়ভাবে বর্তমান Data-এর Backup তৈরি করবে।\n\nআপনি কি Restore করতে চান?"
+        );
+
+        if (!confirmed) return;
+
+        const response = await fetch("/api/admin/customers/restore", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(backupData)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            alert(data.message || "Customer Backup Restore হয়নি!");
+            return;
+        }
+
+        alert("Customer Backup সফলভাবে Restore হয়েছে!");
+
+        await loadCustomers();
+
+    } catch (error) {
+
+        console.error("Customer Restore Error:", error);
+
+        alert("Backup File পড়তে সমস্যা হয়েছে!");
+
+    } finally {
+
+        event.target.value = "";
+
+    }
+}
+
+</script>
+
+<!-- CUSTOMER DETAILS MODAL -->
+
+<div id="customerDetailsModal"
+     style="display:none; position:fixed; inset:0;
+     background:rgba(0,0,0,0.6); z-index:9999;
+     justify-content:center; align-items:center;
+     padding:15px;">
+
+    <div style="background:white; padding:22px;
+        border-radius:12px; width:100%;
+        max-width:450px;">
+
+        <h2>👤 Customer Details</h2>
+
+        <div id="customerDetailsContent"></div>
+
+        <button onclick="closeCustomerDetails()"
+            style="margin-top:18px; padding:11px 20px;
+            background:#8e2de2; color:white;
+            border:0; border-radius:7px; cursor:pointer;">
+            Close
+        </button>
+
+    </div>
+</div>
+
+</body>
+</html>

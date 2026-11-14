@@ -403,7 +403,13 @@
             <p>💰 মোট বিক্রি</p>
             <h2 id="totalSales">৳ 0</h2>
         </div>
+	<div class="card">
+            <p>👥 মোট Customer</p>
+            <h2 id="totalCustomers">0</h2>
+	</div>
+
     </div>
+
 
     <!-- ================= PRODUCT MANAGEMENT ================= -->
 
@@ -492,6 +498,34 @@
     <div id="productsContainer" class="products">
         <div class="empty">Product লোড হচ্ছে...</div>
     </div>
+
+</div>
+
+
+
+<!-- ================= CUSTOMER MANAGEMENT ================= -->
+
+<div class="section">
+
+    <h2>👥 Customer Management</h2>
+
+    <p>
+        এখানে আপনার সকল Registered Customer-এর তথ্য
+        দেখতে ও পরিচালনা করতে পারবেন।
+    </p>
+
+    <a href="/customers.html"
+       style="
+           display:inline-block;
+           padding:12px 22px;
+           background:linear-gradient(135deg,#d4145a,#8e2de2);
+           color:white;
+           text-decoration:none;
+           border-radius:8px;
+           font-weight:bold;
+       ">
+        👥 Open Customer Management
+    </a>
 
 </div>
 
@@ -1789,9 +1823,10 @@ async function checkAdminLogin() {
 
     if (!loggedIn) return;
 
-    loadProducts();
-    loadOrders();
-    loadAdminVideos();
+	loadProducts();
+	loadOrders();
+	loadCustomers();
+	loadAdminVideos();
 
 })();
 
@@ -2855,6 +2890,95 @@ formData.append(
 
     }
 );
+
+
+// ================= LOAD CUSTOMERS =================
+
+async function loadCustomers() {
+
+    try {
+
+        const response = await fetch(
+            "/api/admin/customers",
+            { credentials: "include" }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error("Customer loading failed");
+        }
+
+        // TOTAL CUSTOMERS
+
+        const totalElement =
+            document.getElementById("totalCustomers");
+
+        if (totalElement) {
+            totalElement.textContent =
+                data.totalCustomers;
+        }
+
+        // CUSTOMER TABLE
+
+        const tableBody =
+            document.getElementById("customersTableBody");
+
+        if (!tableBody) return;
+
+        tableBody.innerHTML = "";
+
+        if (!data.customers || data.customers.length === 0) {
+
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="4" style="padding:12px;">
+                        No customers registered yet.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+        data.customers.forEach(customer => {
+
+            const row = document.createElement("tr");
+
+            const nameCell = document.createElement("td");
+            nameCell.textContent = customer.name || "-";
+
+            const phoneCell = document.createElement("td");
+            phoneCell.textContent = customer.phone || "-";
+
+            const emailCell = document.createElement("td");
+            emailCell.textContent = customer.email || "-";
+
+            const dateCell = document.createElement("td");
+
+            dateCell.textContent = customer.createdAt
+                ? new Date(customer.createdAt).toLocaleDateString("en-GB")
+                : "-";
+
+            [nameCell, phoneCell, emailCell, dateCell].forEach(cell => {
+                cell.style.padding = "12px";
+                cell.style.borderBottom = "1px solid #ddd";
+                row.appendChild(cell);
+            });
+
+            tableBody.appendChild(row);
+
+        });
+
+    } catch (error) {
+
+        console.error("Customer loading error:", error);
+
+    }
+
+}
+
+
 </script>
 
 </body>
