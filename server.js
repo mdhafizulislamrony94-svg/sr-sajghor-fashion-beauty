@@ -1619,7 +1619,13 @@ app.delete(
 
 // ================= CUSTOMER ACCOUNT SYSTEM =================
 
-const customersFile = path.join(__dirname, "customers.json");
+const customerStorageRoot = process.env.RAILWAY_VOLUME_MOUNT_PATH
+    ? storageRoot
+    : __dirname;
+if (!fs.existsSync(customerStorageRoot)) {
+    fs.mkdirSync(customerStorageRoot, { recursive: true });
+}
+const customersFile = path.join(customerStorageRoot, "customers.json");
 
 function loadCustomers() {
 
