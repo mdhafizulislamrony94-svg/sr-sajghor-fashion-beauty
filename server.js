@@ -695,56 +695,161 @@ app.put("/api/products/:id", requireAdmin, (req, res) => {
 
 
 
-// Delete Product
-
-app.delete("/api/products/:id", (req, res) => {
-
-    // Admin Login Chec
-
-    const id =
-        Number(req.params.id);
-
-
-    const productIndex =
-        products.findIndex(
-            item => item.id === id
+// ================= ADMIN PROTECTED OLD PRODUCT RESET =================
+const legacyProductResetTargets = new Map([
+    [1, []],
+    [3, []],
+    [1788970156662, ["/uploads/1788970994906.jpg"]],
+    [1788974998540, ["/uploads/1788974998534.png"]],
+    [1789152558139, ["/uploads/1789152701848.jpg"]],
+    [1789241937355, ["/uploads/1789241937350.jpeg"]],
+    [1789322151339, ["/uploads/1789322151319.jpeg"]]
+]);
+app.delete("/api/products/reset-old-catalog", requireAdmin, (req, res) => {
+    try {
+        const targetIds = [...legacyProductResetTargets.keys()];
+        const targetProducts = products.filter(product =>
+            legacyProductResetTargets.has(Number(product.id))
         );
-
-
-    if (productIndex === -1) {
-
-        return res.status(404).json({
-
-            success: false,
-
-            message:
-                "Product পাওয়া যায়নি।"
-
+        const invalidTargetId = targetIds.some(id =>
+            products.filter(product => Number(product.id) === id).length !== 1
+        );
+        if (invalidTargetId) {
+            return res.status(409).json({
+                success: false,
+                message: "পুরোনো ৭টি Product ID-এর তালিকা মেলেনি বা ডুপ্লিকেট আছে। কোনো পরিবর্তন করা হয়নি।"
+            });
+        }
+        for (const product of targetProducts) {
+            const expectedPaths =
+                legacyProductResetTargets.get(Number(product.id));
+            if (
+                product.images != null &&
+                !Array.isArray(product.images)
+            ) {
+                return res.status(409).json({
+                    success: false,
+                    message: "Product-এর Image তথ্য অপ্রত্যাশিত। কোনো পরিবর্তন করা হয়নি।"
+                });
+            }
+            const actualPaths = [
+                product.image,
+                ...(Array.isArray(product.images) ? product.images : [])
+            ].filter(value =>
+                typeof value === "string" && value.trim() !== ""
+            );
+            const uniqueActualPaths = [...new Set(actualPaths)];
+            if (
+                uniqueActualPaths.length !== expectedPaths.length ||
+                expectedPaths.some(imagePath =>
+                    !uniqueActualPaths.includes(imagePath)
+                )
+            ) {
+                return res.status(409).json({
+                    success: false,
+                    message: "Product-এর Image path মেলেনি। কোনো পরিবর্তন করা হয়নি।"
+                });
+            }
+        }
+        const allowedImagePaths = new Set(
+            [...legacyProductResetTargets.values()].flat()
+        );
+        const sharedImage = products
+            .filter(product =>
+                !legacyProductResetTargets.has(Number(product.id))
+            )
+            .flatMap(product => [
+                product.image,
+                ...(Array.isArray(product.images) ? product.images : [])
+            ])
+            .find(imagePath => allowedImagePaths.has(imagePath));
+        if (sharedImage) {
+            return res.status(409).json({
+                success: false,
+                message: "একটি Image অন্য Product-এ ব্যবহৃত হচ্ছে। কোনো পরিবর্তন করা হয়নি।"
+            });
+        }
+        const imageFiles = [...allowedImagePaths].map(publicPath => {
+            const filename = publicPath.replace(/^\/uploads\//, "");
+            if (
+                !filename ||
+                filename !== path.basename(filename)
+            ) {
+                throw new Error("অনুমোদিত Image path পাওয়া যায়নি।");
+            }
+            const fullPath = path.resolve(uploadDir, filename);
+            const uploadRoot = path.resolve(uploadDir) + path.sep;
+            if (!fullPath.startsWith(uploadRoot)) {
+                throw new Error("Image path নিরাপত্তা যাচাই ব্যর্থ হয়েছে।");
+            }
+            return {
+                publicPath,
+                fullPath
+            };
         });
-
+        const originalProducts = products;
+        products = products.filter(product =>
+            !legacyProductResetTargets.has(Number(product.id))
+        );
+        try {
+            saveProducts();
+        } catch (saveError) {
+            products = originalProducts;
+            throw saveError;
+        }
+        const deletedImages = [];
+        const missingImages = [];
+        const failedImages = [];
+        for (const image of imageFiles) {
+            if (!fs.existsSync(image.fullPath)) {
+                missingImages.push(image.publicPath);
+                continue;
+            }
+            try {
+                fs.unlinkSync(image.fullPath);
+                deletedImages.push(image.publicPath);
+            } catch (imageError) {
+                console.error("Image Delete Error:", imageError);
+                failedImages.push(image.publicPath);
+            }
+        }
+        res.json({
+            success: failedImages.length === 0,
+            message: failedImages.length === 0
+                ? "পুরোনো ৭টি Product পরিষ্কার করা হয়েছে।"
+                : "Product মুছে গেছে, কিন্তু কিছু Image মুছতে সমস্যা হয়েছে।",
+            deletedProducts: targetIds.length,
+            deletedImages,
+            missingImages,
+            failedImages
+        });
+    } catch (error) {
+        console.error("Old Product Reset Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Product Reset করতে সমস্যা হয়েছে।"
+        });
     }
-
-
-    products.splice(
-        productIndex,
-        1
-    );
-
-
-    saveProducts();
-
-
-    res.json({
-
-        success: true,
-
-        message:
-            "🗑️ Product মুছে ফেলা হয়েছে।"
-
-    });
-
 });
-
+// ================= ADMIN PROTECTED SINGLE PRODUCT DELETE =================
+app.delete("/api/products/:id", requireAdmin, (req, res) => {
+    const id = Number(req.params.id);
+    const productIndex = products.findIndex(
+        item => item.id === id
+    );
+    if (productIndex === -1) {
+        return res.status(404).json({
+            success: false,
+            message: "Product পাওয়া যায়নি।"
+        });
+    }
+    products.splice(productIndex, 1);
+    saveProducts();
+    res.json({
+        success: true,
+        message: "🗑️ Product মুছে ফেলা হয়েছে।"
+    });
+});
 // ================= CUSTOMER SAVED ADDRESSES =================
 
 const customerAddressesFile =
