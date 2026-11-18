@@ -3045,6 +3045,30 @@ app.get("/api/reviews/:productId", (req, res) => {
     }
 });
 
+// ================= ADMIN DELETE ALL REVIEWS =================
+
+app.delete("/api/reviews", requireAdmin, (req, res) => {
+    try {
+        fs.writeFileSync(
+            reviewsFile,
+            JSON.stringify([], null, 2),
+            "utf8"
+        );
+
+        res.json({
+            success: true,
+            message: "সব পুরোনো Review মুছে ফেলা হয়েছে।"
+        });
+
+    } catch (error) {
+        console.error("Delete Reviews Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Review মুছতে সমস্যা হয়েছে।"
+        });
+    }
+});
 
 // ================= GET VIDEOS =================
 
