@@ -1,4 +1,4 @@
-require("dotenv").config();
+﻿require("dotenv").config();
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const path = require("path");
@@ -560,15 +560,21 @@ function saveOrders() {
 // Get Products
 
 app.get("/api/products", (req, res) => {
-
-    res.json({
-
-        success: true,
-
-        products: products
-
+    const updatedProducts = products.map(product => {
+        const offer = getEffectiveProductPrice(product);
+        return {
+            ...product,
+            effectivePrice: offer.effectivePrice,
+            offerActive: offer.active,
+            originalPrice: offer.originalPrice,
+            discountAmount: offer.discountAmount,
+            discountPercent: offer.discountPercent
+        };
     });
-
+    res.json({
+        success: true,
+        products: updatedProducts
+    });
 });
 
 // ================= ADD NEW PRODUCT API =================
@@ -695,161 +701,56 @@ app.put("/api/products/:id", requireAdmin, (req, res) => {
 
 
 
-// ================= ADMIN PROTECTED OLD PRODUCT RESET =================
-const legacyProductResetTargets = new Map([
-    [1, []],
-    [3, []],
-    [1788970156662, ["/uploads/1788970994906.jpg"]],
-    [1788974998540, ["/uploads/1788974998534.png"]],
-    [1789152558139, ["/uploads/1789152701848.jpg"]],
-    [1789241937355, ["/uploads/1789241937350.jpeg"]],
-    [1789322151339, ["/uploads/1789322151319.jpeg"]]
-]);
-app.delete("/api/products/reset-old-catalog", requireAdmin, (req, res) => {
-    try {
-        const targetIds = [...legacyProductResetTargets.keys()];
-        const targetProducts = products.filter(product =>
-            legacyProductResetTargets.has(Number(product.id))
-        );
-        const invalidTargetId = targetIds.some(id =>
-            products.filter(product => Number(product.id) === id).length !== 1
-        );
-        if (invalidTargetId) {
-            return res.status(409).json({
-                success: false,
-                message: "পুরোনো ৭টি Product ID-এর তালিকা মেলেনি বা ডুপ্লিকেট আছে। কোনো পরিবর্তন করা হয়নি।"
-            });
-        }
-        for (const product of targetProducts) {
-            const expectedPaths =
-                legacyProductResetTargets.get(Number(product.id));
-            if (
-                product.images != null &&
-                !Array.isArray(product.images)
-            ) {
-                return res.status(409).json({
-                    success: false,
-                    message: "Product-এর Image তথ্য অপ্রত্যাশিত। কোনো পরিবর্তন করা হয়নি।"
-                });
-            }
-            const actualPaths = [
-                product.image,
-                ...(Array.isArray(product.images) ? product.images : [])
-            ].filter(value =>
-                typeof value === "string" && value.trim() !== ""
-            );
-            const uniqueActualPaths = [...new Set(actualPaths)];
-            if (
-                uniqueActualPaths.length !== expectedPaths.length ||
-                expectedPaths.some(imagePath =>
-                    !uniqueActualPaths.includes(imagePath)
-                )
-            ) {
-                return res.status(409).json({
-                    success: false,
-                    message: "Product-এর Image path মেলেনি। কোনো পরিবর্তন করা হয়নি।"
-                });
-            }
-        }
-        const allowedImagePaths = new Set(
-            [...legacyProductResetTargets.values()].flat()
-        );
-        const sharedImage = products
-            .filter(product =>
-                !legacyProductResetTargets.has(Number(product.id))
-            )
-            .flatMap(product => [
-                product.image,
-                ...(Array.isArray(product.images) ? product.images : [])
-            ])
-            .find(imagePath => allowedImagePaths.has(imagePath));
-        if (sharedImage) {
-            return res.status(409).json({
-                success: false,
-                message: "একটি Image অন্য Product-এ ব্যবহৃত হচ্ছে। কোনো পরিবর্তন করা হয়নি।"
-            });
-        }
-        const imageFiles = [...allowedImagePaths].map(publicPath => {
-            const filename = publicPath.replace(/^\/uploads\//, "");
-            if (
-                !filename ||
-                filename !== path.basename(filename)
-            ) {
-                throw new Error("অনুমোদিত Image path পাওয়া যায়নি।");
-            }
-            const fullPath = path.resolve(uploadDir, filename);
-            const uploadRoot = path.resolve(uploadDir) + path.sep;
-            if (!fullPath.startsWith(uploadRoot)) {
-                throw new Error("Image path নিরাপত্তা যাচাই ব্যর্থ হয়েছে।");
-            }
-            return {
-                publicPath,
-                fullPath
-            };
-        });
-        const originalProducts = products;
-        products = products.filter(product =>
-            !legacyProductResetTargets.has(Number(product.id))
-        );
-        try {
-            saveProducts();
-        } catch (saveError) {
-            products = originalProducts;
-            throw saveError;
-        }
-        const deletedImages = [];
-        const missingImages = [];
-        const failedImages = [];
-        for (const image of imageFiles) {
-            if (!fs.existsSync(image.fullPath)) {
-                missingImages.push(image.publicPath);
-                continue;
-            }
-            try {
-                fs.unlinkSync(image.fullPath);
-                deletedImages.push(image.publicPath);
-            } catch (imageError) {
-                console.error("Image Delete Error:", imageError);
-                failedImages.push(image.publicPath);
-            }
-        }
-        res.json({
-            success: failedImages.length === 0,
-            message: failedImages.length === 0
-                ? "পুরোনো ৭টি Product পরিষ্কার করা হয়েছে।"
-                : "Product মুছে গেছে, কিন্তু কিছু Image মুছতে সমস্যা হয়েছে।",
-            deletedProducts: targetIds.length,
-            deletedImages,
-            missingImages,
-            failedImages
-        });
-    } catch (error) {
-        console.error("Old Product Reset Error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Product Reset করতে সমস্যা হয়েছে।"
-        });
-    }
-});
-// ================= ADMIN PROTECTED SINGLE PRODUCT DELETE =================
+// Delete Product
+
 app.delete("/api/products/:id", requireAdmin, (req, res) => {
-    const id = Number(req.params.id);
-    const productIndex = products.findIndex(
-        item => item.id === id
-    );
+
+    // Admin Login Chec
+
+    const id =
+        Number(req.params.id);
+
+
+    const productIndex =
+        products.findIndex(
+            item => item.id === id
+        );
+
+
     if (productIndex === -1) {
+
         return res.status(404).json({
+
             success: false,
-            message: "Product পাওয়া যায়নি।"
+
+            message:
+                "Product পাওয়া যায়নি।"
+
         });
+
     }
-    products.splice(productIndex, 1);
+
+
+    products.splice(
+        productIndex,
+        1
+    );
+
+
     saveProducts();
+
+
     res.json({
+
         success: true,
-        message: "🗑️ Product মুছে ফেলা হয়েছে।"
+
+        message:
+            "🗑️ Product মুছে ফেলা হয়েছে।"
+
     });
+
 });
+
 // ================= CUSTOMER SAVED ADDRESSES =================
 
 const customerAddressesFile =
@@ -1093,66 +994,46 @@ app.delete(
 // ================= ORDER API =================
 
 app.post("/api/orders", (req, res) => {
-
-const {
-    name,
-    phone,
-    address,
-    note,
-    products: orderedProducts,
-    total,
-    paymentMethod,
-    paymentSenderPhone,
-    transactionId
-} = req.body;
-
-// ================= CUSTOMER ID =================
-
-let customerId = null;
-
-const customerToken =
-    req.cookies.customerToken;
-
-if (
-    customerToken &&
-    global.customerSessions
-) {
-
-    customerId =
-        global.customerSessions.get(
-            customerToken
-        ) || null;
-
-}
-
-// ================= PAYMENT CHECK =================
-
-const allowedPaymentMethods = [
-    "bkash",
-    "nagad",
-    "rocket",
-    "cod"
-];
-
-if (!allowedPaymentMethods.includes(paymentMethod)) {
-    return res.status(400).json({
-        success: false,
-        message: "একটি পেমেন্ট পদ্ধতি নির্বাচন করুন।"
-    });
-}
-
-if (
-    paymentMethod !== "cod" &&
-    (!paymentSenderPhone || !transactionId)
-) {
-    return res.status(400).json({
-        success: false,
-        message: "পেমেন্ট নম্বর ও Transaction ID দিন।"
-    });
-}
-
+    const {
+        name,
+        phone,
+        address,
+        note,
+        products: orderedProducts,
+        paymentMethod,
+        paymentSenderPhone,
+        transactionId
+    } = req.body;
+    // ================= CUSTOMER ID =================
+    let customerId = null;
+    const customerToken = req.cookies.customerToken;
+    if (customerToken && global.customerSessions) {
+        customerId =
+            global.customerSessions.get(customerToken) || null;
+    }
+    // ================= PAYMENT CHECK =================
+    const allowedPaymentMethods = [
+        "bkash",
+        "nagad",
+        "rocket",
+        "cod"
+    ];
+    if (!allowedPaymentMethods.includes(paymentMethod)) {
+        return res.status(400).json({
+            success: false,
+            message: "একটি পেমেন্ট পদ্ধতি নির্বাচন করুন।"
+        });
+    }
+    if (
+        paymentMethod !== "cod" &&
+        (!paymentSenderPhone || !transactionId)
+    ) {
+        return res.status(400).json({
+            success: false,
+            message: "পেমেন্ট নম্বর ও Transaction ID দিন।"
+        });
+    }
     // ================= BASIC CHECK =================
-
     if (
         !name ||
         !phone ||
@@ -1160,184 +1041,153 @@ if (
         !Array.isArray(orderedProducts) ||
         orderedProducts.length === 0
     ) {
-
         return res.status(400).json({
-
             success: false,
-
-            message:
-                "সব তথ্য পূরণ করুন।"
-
+            message: "সব তথ্য পূরণ করুন।"
         });
-
     }
-
-
-    // ================= CHECK STOCK =================
-
+    // ================= VALIDATE AND GROUP PRODUCTS =================
+    const groupedProducts = new Map();
     for (const item of orderedProducts) {
-
-        const productId =
-            Number(item.id ?? item.productId);
-
-        const quantity =
-            Number(item.quantity || 1);
-
-
-        const product =
-            products.find(
-                p => Number(p.id) === productId
-            );
-
-
-        if (!product) {
-
+        if (!item || typeof item !== "object") {
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    `"${item.name || "Product"}" পাওয়া যায়নি।`
-
+                message: "Product তথ্য সঠিক নয়।"
             });
-
         }
-
-
+        const productId = Number(item.id ?? item.productId);
+        const quantity = Number(item.quantity ?? 1);
         if (
-            !Number.isFinite(quantity) ||
+            !Number.isSafeInteger(productId) ||
+            !Number.isSafeInteger(quantity) ||
             quantity <= 0
         ) {
-
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "Product quantity সঠিক নয়।"
-
+                message: "Product ID অথবা Quantity সঠিক নয়।"
             });
-
         }
-
-
-        if (Number(product.stock) < quantity) {
-
+        const product = products.find(
+            p => Number(p.id) === productId
+        );
+        if (!product) {
             return res.status(400).json({
-
                 success: false,
-
+                message: "একটি নির্বাচিত Product পাওয়া যায়নি।"
+            });
+        }
+        const existing = groupedProducts.get(productId);
+        if (existing) {
+            existing.quantity += quantity;
+            if (!Number.isSafeInteger(existing.quantity)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Product Quantity সঠিক নয়।"
+                });
+            }
+        } else {
+            groupedProducts.set(productId, {
+                product,
+                quantity
+            });
+        }
+    }
+    // ================= SERVER PRICE AND STOCK CHECK =================
+    const canonicalProducts = [];
+    let calculatedTotal = 0;
+    for (const [productId, entry] of groupedProducts) {
+        const product = entry.product;
+        const quantity = entry.quantity;
+        const stock = Number(product.stock);
+        const offer = getEffectiveProductPrice(product);
+        if (
+            !Number.isFinite(stock) ||
+            stock < quantity
+        ) {
+            return res.status(400).json({
+                success: false,
                 message:
                     `"${product.name}" এর পর্যাপ্ত Stock নেই। বর্তমানে Stock: ${product.stock}`
-
             });
-
         }
-
+        if (
+            !Number.isFinite(offer.effectivePrice) ||
+            offer.effectivePrice <= 0 ||
+            !Number.isFinite(offer.originalPrice) ||
+            offer.originalPrice <= 0
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: `"${product.name}" এর মূল্য সঠিক নয়।`
+            });
+        }
+        const subtotal = offer.effectivePrice * quantity;
+        if (!Number.isFinite(subtotal)) {
+            return res.status(400).json({
+                success: false,
+                message: "Order Total হিসাব করা যায়নি।"
+            });
+        }
+        calculatedTotal += subtotal;
+        canonicalProducts.push({
+            id: productId,
+            name: product.name,
+            price: offer.effectivePrice,
+            originalPrice: offer.originalPrice,
+            offerActive: offer.active,
+            discountAmount: offer.discountAmount,
+            discountPercent: offer.discountPercent,
+            quantity: quantity,
+            image: product.image || "",
+            category: product.category || "",
+            description: product.description || ""
+        });
     }
-
-
-    // ================= REDUCE STOCK =================
-
-    for (const item of orderedProducts) {
-
-        const productId =
-            Number(item.id ?? item.productId);
-
-        const quantity =
-            Number(item.quantity || 1);
-
-
-        const product =
-            products.find(
-                p => Number(p.id) === productId
-            );
-
-
-        product.stock =
-            Number(product.stock) - quantity;
-
+    if (!Number.isFinite(calculatedTotal)) {
+        return res.status(400).json({
+            success: false,
+            message: "Order Total সঠিক নয়।"
+        });
     }
-
-
-    // ================= SAVE PRODUCT STOCK =================
-
+    // ================= REDUCE STOCK AFTER ALL CHECKS =================
+    for (const entry of groupedProducts.values()) {
+        entry.product.stock =
+            Number(entry.product.stock) - entry.quantity;
+    }
     saveProducts();
-
-
     // ================= CREATE ORDER =================
-
-    const orderId =
-        "SZ" + Date.now();
-
-
+    const orderId = "SZ" + Date.now();
     const newOrder = {
-
-    orderId:
         orderId,
-
-    customerId:
         customerId,
-
-    name:
         name,
-
-    phone:
         phone,
-
-    address:
         address,
-
-    note:
-        note || "",
-    paymentMethod: paymentMethod,
-    paymentSenderPhone: paymentMethod === "cod" ? "" : paymentSenderPhone,
-    transactionId: paymentMethod === "cod" ? "" : transactionId,
-    paymentStatus: paymentMethod === "cod" ? "due_on_delivery" : "pending_verification",
-
-    products: orderedProducts,
-
-    total:
-        Number(total),
-
-    status:
-        "pending",
-
-    createdAt:
-        new Date().toISOString()
-
-};
-
-
+        note: note || "",
+        paymentMethod,
+        paymentSenderPhone:
+            paymentMethod === "cod" ? "" : paymentSenderPhone,
+        transactionId:
+            paymentMethod === "cod" ? "" : transactionId,
+        paymentStatus:
+            paymentMethod === "cod"
+                ? "due_on_delivery"
+                : "pending_verification",
+        products: canonicalProducts,
+        total: calculatedTotal,
+        status: "pending",
+        createdAt: new Date().toISOString()
+    };
     orders.push(newOrder);
-
     saveOrders();
-
-
-    console.log(
-        "📦 নতুন Order:",
-        newOrder
-    );
-
-    console.log(
-        "📦 Product Stock automatically কমেছে।"
-    );
-
-
+    console.log("📦 নতুন Order:", newOrder);
+    console.log("📦 Server-verified price এবং Stock আপডেট হয়েছে।");
     res.json({
-
         success: true,
-
-        message:
-            "অর্ডার সফলভাবে গ্রহণ করা হয়েছে এবং Stock আপডেট হয়েছে।",
-
-        order:
-            newOrder
-
+        message: "অর্ডার সফলভাবে গ্রহণ করা হয়েছে এবং Stock আপডেট হয়েছে।",
+        order: newOrder
     });
-
 });
-
 // ================= GET ADMIN ORDERS =================
 
 app.get("/api/orders", requireAdmin, (req, res) => {
@@ -3175,7 +3025,209 @@ app.delete("/api/reviews", requireAdmin, (req, res) => {
     }
 });
 
-// ================= GET VIDEOS =================
+// ================= SPECIAL OFFER SETTINGS =================
+const offerSettingsFile = path.join(storageRoot, "offer-settings.json");
+function loadOfferSettings() {
+    try {
+        if (!fs.existsSync(offerSettingsFile)) {
+            fs.writeFileSync(
+                offerSettingsFile,
+                JSON.stringify({ active: false }, null, 2),
+                "utf8"
+            );
+        }
+        return JSON.parse(
+            fs.readFileSync(offerSettingsFile, "utf8")
+        );
+    } catch (error) {
+        console.error("Offer settings load error:", error);
+        return { active: false };
+    }
+}
+let offerSettings = loadOfferSettings();function getBangladeshDate() {
+    const parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Asia/Dhaka",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+    }).formatToParts(new Date());
+    const values = {};
+    parts.forEach(part => {
+        values[part.type] = part.value;
+    });
+    return `${values.year}-${values.month}-${values.day}`;
+}
+function getEffectiveProductPrice(product) {
+    const originalPrice = Number(product.price);
+    const offerPrice = Number(product.offerPrice);
+    const start = product.offerStart;
+    const end = product.offerEnd;
+    const today = getBangladeshDate();
+    const validDate = value => {
+        if (typeof value !== "string" ||
+            !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            return false;
+        }
+        const [year, month, day] = value.split("-").map(Number);
+            const parsed = new Date(Date.UTC(year, month - 1, day));
+            return parsed.getUTCFullYear() === year &&
+                parsed.getUTCMonth() === month - 1 &&
+                parsed.getUTCDate() === day;
+    };
+    const active =
+        offerSettings.active === true &&
+        Number.isFinite(originalPrice) &&
+        Number.isFinite(offerPrice) &&
+        offerPrice > 0 &&
+        offerPrice < originalPrice &&
+        validDate(start) &&
+        validDate(end) &&
+        start <= end &&
+        today >= start &&
+        today <= end;
+    const effectivePrice = active ? offerPrice : originalPrice;
+    const discountAmount = active ? originalPrice - offerPrice : 0;
+    return {
+        active,
+        originalPrice,
+        offerPrice: active ? offerPrice : null,
+        effectivePrice,
+        discountAmount,
+        discountPercent: active
+            ? Math.round((discountAmount / originalPrice) * 100)
+            : 0
+    };
+}
+app.get("/api/offer-settings", (req, res) => {
+    res.json({
+        success: true,
+        active: offerSettings.active === true
+    });
+});
+app.post("/api/offer-settings", requireAdmin, (req, res) => {
+    try {
+        if (typeof req.body.active !== "boolean") {
+            return res.status(400).json({
+                success: false,
+                message: "সঠিক ON/OFF সেটিং দিন।"
+            });
+        }
+        offerSettings = {
+            active: req.body.active
+        };
+        fs.writeFileSync(
+            offerSettingsFile,
+            JSON.stringify(offerSettings, null, 2),
+            "utf8"
+        );
+        res.json({
+            success: true,
+            active: offerSettings.active,
+            message: "Special Offer সেটিং সংরক্ষণ হয়েছে।"
+        });
+    } catch (error) {
+        console.error("Offer settings save error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Offer সেটিং সংরক্ষণ করা যায়নি।"
+        });
+    }
+});
+// ================= PRODUCT SPECIAL OFFER API =================
+app.put("/api/products/:id/offer", requireAdmin, (req, res) => {
+    try {
+        const productId = Number(req.params.id);
+        const product = products.find(p => Number(p.id) === productId);
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: "Product পাওয়া যায়নি।"
+            });
+        }
+        const { offerPrice, offerStart, offerEnd } = req.body;
+        if (
+            offerPrice === null ||
+            offerPrice === "" ||
+            offerStart === "" ||
+            offerEnd === "" ||
+            offerPrice === undefined ||
+            offerStart === undefined ||
+            offerEnd === undefined
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Offer Price এবং শুরু ও শেষের তারিখ দিন।"
+            });
+        }
+        const price = Number(offerPrice);
+        const originalPrice = Number(product.price);
+        if (
+            !Number.isFinite(price) ||
+            price <= 0 ||
+            price >= originalPrice
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Offer Price মূল দামের চেয়ে কম এবং শূন্যের বেশি হতে হবে।"
+            });
+        }
+        const validDate = value => {
+            if (typeof value !== "string" ||
+                !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                return false;
+            }
+            const [year, month, day] = value.split("-").map(Number);
+            const parsed = new Date(Date.UTC(year, month - 1, day));
+
+            return parsed.getUTCFullYear() === year &&
+                parsed.getUTCMonth() === month - 1 &&
+                parsed.getUTCDate() === day;
+        };
+        if (
+            !validDate(offerStart) ||
+            !validDate(offerEnd) ||
+            offerStart > offerEnd
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "সঠিক Offer শুরুর ও শেষের তারিখ দিন।"
+            });
+        }
+        product.offerPrice = price;
+        product.offerStart = offerStart;
+        product.offerEnd = offerEnd;
+        saveProducts();
+        res.json({
+            success: true,
+            message: "Product Special Offer সংরক্ষণ হয়েছে।",
+            product: product
+        });
+    } catch (error) {
+        console.error("Product Offer Save Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Product Offer সংরক্ষণ করা যায়নি।"
+        });
+    }
+});
+app.delete("/api/products/:id/offer", requireAdmin, (req, res) => {
+    const productId = Number(req.params.id);
+    const product = products.find(p => Number(p.id) === productId);
+    if (!product) {
+        return res.status(404).json({
+            success: false,
+            message: "Product পাওয়া যায়নি।"
+        });
+    }
+    delete product.offerPrice;
+    delete product.offerStart;
+    delete product.offerEnd;
+    saveProducts();
+    res.json({
+        success: true,
+        message: "Product Offer মুছে ফেলা হয়েছে।"
+    });
+});// ================= GET VIDEOS =================
 
 app.get("/api/videos", (req, res) => {
     res.json({
@@ -3238,3 +3290,4 @@ process.on("uncaughtException", (err) => {
 process.on("unhandledRejection", (err) => {
     console.error("❌ Unhandled Rejection:", err);
 });
+

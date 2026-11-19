@@ -1161,7 +1161,7 @@ async function loadOrders() {
     try {
 
         const response =
-            await fetch("/api/orders");
+            await fetch("/api/orders", { credentials: "include" });
 
         const data =
             await response.json();
@@ -1840,7 +1840,7 @@ async function checkNewOrders() {
     try {
 
         const response =
-            await fetch("/api/orders");
+            await fetch("/api/orders", { credentials: "include" });
 
         const data =
             await response.json();
@@ -2079,46 +2079,46 @@ function numberToWordsHindi(num) {
 // ================= BANGLA AMOUNT IN WORDS =================
 
 function numberToWordsBangla(num) {
-
-    const ones = [
+    const words = [
         "শূন্য", "এক", "দুই", "তিন", "চার",
         "পাঁচ", "ছয়", "সাত", "আট", "নয়",
         "দশ", "এগারো", "বারো", "তেরো", "চৌদ্দ",
-        "পনেরো", "ষোলো", "সতেরো", "আঠারো", "উনিশ"
+        "পনেরো", "ষোলো", "সতেরো", "আঠারো", "উনিশ",
+        "বিশ", "একুশ", "বাইশ", "তেইশ", "চব্বিশ",
+        "পঁচিশ", "ছাব্বিশ", "সাতাশ", "আটাশ", "ঊনত্রিশ",
+        "ত্রিশ", "একত্রিশ", "বত্রিশ", "তেত্রিশ", "চৌত্রিশ",
+        "পঁয়ত্রিশ", "ছত্রিশ", "সাঁইত্রিশ", "আটত্রিশ", "ঊনচল্লিশ",
+        "চল্লিশ", "একচল্লিশ", "বিয়াল্লিশ", "তেতাল্লিশ", "চুয়াল্লিশ",
+        "পঁয়তাল্লিশ", "ছেচল্লিশ", "সাতচল্লিশ", "আটচল্লিশ", "ঊনপঞ্চাশ",
+        "পঞ্চাশ", "একান্ন", "বাহান্ন", "তিপ্পান্ন", "চুয়ান্ন",
+        "পঞ্চান্ন", "ছাপ্পান্ন", "সাতান্ন", "আটান্ন", "ঊনষাট",
+        "ষাট", "একষট্টি", "বাষট্টি", "তেষট্টি", "চৌষট্টি",
+        "পঁয়ষট্টি", "ছেষট্টি", "সাতষট্টি", "আটষট্টি", "ঊনসত্তর",
+        "সত্তর", "একাত্তর", "বাহাত্তর", "তিয়াত্তর", "চুয়াত্তর",
+        "পঁচাত্তর", "ছিয়াত্তর", "সাতাত্তর", "আটাত্তর", "ঊনআশি",
+        "আশি", "একাশি", "বিরাশি", "তিরাশি", "চুরাশি",
+        "পঁচাশি", "ছিয়াশি", "সাতাশি", "আটাশি", "ঊননব্বই",
+        "নব্বই", "একানব্বই", "বিরানব্বই", "তিরানব্বই", "চুরানব্বই",
+        "পঁচানব্বই", "ছিয়ানব্বই", "সাতানব্বই", "আটানব্বই", "নিরানব্বই"
     ];
-
-    const tens = [
-        "", "", "বিশ", "ত্রিশ", "চল্লিশ",
-        "পঞ্চাশ", "ষাট", "সত্তর", "আশি", "নব্বই"
-    ];
-
     function convert(n) {
-
-        if (n < 20) return ones[n];
-
-        if (n < 100) {
-            return tens[Math.floor(n / 10)] +
-                (n % 10 ? " " + ones[n % 10] : "");
-        }
-
+        n = Math.floor(n);
+        if (n < 100) return words[n] || "";
         if (n < 1000) {
-            return ones[Math.floor(n / 100)] + " শত" +
+            return words[Math.floor(n / 100)] + " শত" +
                 (n % 100 ? " " + convert(n % 100) : "");
         }
-
         if (n < 100000) {
             return convert(Math.floor(n / 1000)) + " হাজার" +
                 (n % 1000 ? " " + convert(n % 1000) : "");
         }
-
         if (n <= 1000000) {
             return convert(Math.floor(n / 100000)) + " লাখ" +
                 (n % 100000 ? " " + convert(n % 100000) : "");
         }
-
         return "";
     }
-
+    num = Math.floor(Number(num) || 0);
     return convert(num) + " টাকা মাত্র";
 }
 
@@ -2173,348 +2173,399 @@ function numberToWordsArabic(num) {
 }
 
 function printOrder(orderId) {
-
     const orderData = window.currentOrders?.find(
         order => order.orderId === orderId
     );
-
     if (!orderData) {
-        alert("❌ Order data পাওয়া যায়নি।");
+        alert("অর্ডারের তথ্য পাওয়া যায়নি।");
         return;
     }
-
+    const escapeHTML = value =>
+        String(value ?? "").replace(/[&<>"']/g, char => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        })[char]);
     const products = Array.isArray(orderData.products)
         ? orderData.products
         : [];
-
-    const productsHTML = products.map(item => {
-
-        const name = item.name || "পণ্য";
+    const formatMoney = value =>
+        (Number(value) || 0).toLocaleString("en-BD");
+    const total = Number(orderData.total) || 0;
+    const totalQuantity = products.reduce(
+        (sum, item) => sum + (Number(item.quantity) || 1),
+        0
+    );
+    const productsHTML = products.map((item, index) => {
+        const name = escapeHTML(item.name || "পণ্য");
         const price = Number(item.price) || 0;
         const quantity = Number(item.quantity) || 1;
         const subtotal = price * quantity;
-
         return `
-            <div class="receipt-product">
-                <div class="receipt-product-name">
-                    ${name}
-                </div>
-
-                <div class="receipt-product-price">
-                    ৳ ${price.toLocaleString("en-BD")}
-                    × ${quantity}
-                    =
-                    <strong>
-                        ৳ ${subtotal.toLocaleString("en-BD")}
-                    </strong>
-                </div>
-            </div>
+            <tr>
+                <td>${index + 1}. ${name}</td>
+                <td class="center">${formatMoney(quantity)} পিস</td>
+                <td class="right">৳ ${formatMoney(price)}</td>
+                <td class="right">৳ ${formatMoney(subtotal)}</td>
+            </tr>
         `;
     }).join("");
-
-        const total = Number(orderData.total) || 0;
-
-        const languageOptions = receiptLanguages.map(lang => `
-        <option value="${lang.code}">
-            ${lang.name}
-        </option>
+    const orderDate = orderData.createdAt
+        ? new Date(orderData.createdAt)
+        : new Date();
+    const formattedDate = Number.isNaN(orderDate.getTime())
+        ? ""
+        : orderDate.toLocaleDateString("en-GB");
+    const languageOptions = receiptLanguages.map(lang => `
+        <option value="${lang.code}">${escapeHTML(lang.name)}</option>
     `).join("");
-
+    const paymentMethod = escapeHTML(
+        getReceiptPaymentMethod(orderData.paymentMethod)
+    );
+    const paymentStatus =
+        orderData.paymentStatus === "pending_verification"
+            ? "যাচাই বাকি"
+            : orderData.paymentStatus === "due_on_delivery"
+                ? "ডেলিভারির সময় পরিশোধ"
+                : orderData.paymentStatus === "verified"
+                    ? "পেমেন্ট যাচাই হয়েছে"
+                    : "তথ্য পাওয়া যায়নি";
     const printWindow = window.open(
         "",
         "_blank",
-        "width=700,height=800"
+        "width=850,height=950"
     );
-
     if (!printWindow) {
-        alert("❌ Print window খুলতে পারেনি। Browser popup allow করুন।");
+        alert("Print Window খুলতে পারেনি। Browser Popup Allow করুন।");
         return;
     }
-
     printWindow.document.write(`
         <!DOCTYPE html>
         <html lang="bn">
         <head>
             <meta charset="UTF-8">
-
-            <title>
-                Receipt - ${orderData.orderId}
-            </title>
-
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Cash Memo - ${escapeHTML(orderData.orderId)}</title>
             <style>
-
+                * {
+                    box-sizing: border-box;
+                }
                 body {
-                    font-family:
-                        Arial,
-                        "Noto Sans Bengali",
-                        sans-serif;
-
-                    padding: 30px;
+                    margin: 0;
+                    padding: 25px;
+                    background: #f3f3f3;
                     color: #333;
-                    background: #fff;
+                    font-family: Arial, "Noto Sans Bengali", sans-serif;
                 }
-
-                .receipt {
-                    max-width: 600px;
+                .memo {
+                    max-width: 800px;
                     margin: auto;
+                    padding: 35px;
+                    background: white;
+                    border: 1px solid #ddd;
                 }
-
                 .header {
                     text-align: center;
+                    padding-bottom: 18px;
                     border-bottom: 2px solid #d4145a;
-                    padding-bottom: 15px;
-                    margin-bottom: 20px;
                 }
-
                 .header h1 {
                     margin: 0;
                     color: #d4145a;
-                    font-size: 28px;
+                    font-size: 30px;
                 }
-
+                .header h2 {
+                    margin: 5px 0;
+                    font-size: 19px;
+                }
                 .header p {
                     margin: 5px 0;
+                    font-size: 13px;
                 }
-
-                .info {
+                .memo-title {
+                    text-align: center;
+                    margin: 22px 0;
+                }
+                .memo-title h2 {
+                    display: inline-block;
+                    margin: 0;
+                    padding: 7px 35px;
+                    border: 1px solid #d4145a;
+                    border-radius: 5px;
+                    color: #d4145a;
+                    letter-spacing: 2px;
+                }
+                .details {
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 20px;
                     margin-bottom: 20px;
+                    line-height: 1.9;
+                    font-size: 14px;
+                }
+                .details div {
+                    flex: 1;
+                    min-width: 0;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 12px;
+                    font-size: 14px;
+                }
+                th {
+                    padding: 12px 8px;
+                    background: #fce8ef;
+                    color: #9f1649;
+                    border: 1px solid #e5b5c7;
+                }
+                td {
+                    padding: 12px 8px;
+                    border: 1px solid #ddd;
+                }
+                .center {
+                    text-align: center;
+                }
+                .right {
+                    text-align: right;
+                    white-space: nowrap;
+                }
+                .summary {
+                    margin-top: 18px;
+                    margin-left: auto;
+                    max-width: 330px;
+                    text-align: right;
+                    line-height: 2;
+                }
+                .grand-total {
+                    margin-top: 8px;
+                    padding: 12px;
+                    background: #fce8ef;
+                    border: 1px solid #e5b5c7;
+                    color: #d4145a;
+                    font-size: 21px;
+                    font-weight: bold;
+                }
+                .payment {
+                    margin-top: 25px;
+                    padding: 12px;
+                    border: 1px solid #ddd;
+                    line-height: 1.9;
+                    font-size: 13px;
+                }
+                .signatures {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 65px;
+                    text-align: center;
+                }
+                .signature {
+                    width: 180px;
+                    padding-top: 8px;
+                    border-top: 1px solid #555;
+                    font-size: 13px;
+                }
+                .thanks {
+                    margin-top: 30px;
+                    padding-top: 15px;
+                    border-top: 1px dashed #ccc;
+                    text-align: center;
+                    color: #d4145a;
                     line-height: 1.8;
                 }
-
-                .products {
-                    margin-top: 15px;
-                }
-
-                .receipt-product {
-                    padding: 12px 0;
-                    border-bottom: 1px solid #ddd;
-                }
-
-                .receipt-product-name {
-                    font-weight: bold;
-                    font-size: 16px;
-                    margin-bottom: 5px;
-                }
-
-                .receipt-product-price {
-                    font-size: 14px;
-                    color: #555;
-                }
-
-                .receipt-product-price strong {
-                    color: #d4145a;
-                }
-
-                .total {
-                    text-align: right;
-                    font-size: 20px;
-                    font-weight: bold;
-                    color: #d4145a;
-                    margin-top: 20px;
-                    padding-top: 15px;
-                    border-top: 2px solid #333;
-                }
-
-                .thanks {
+                .controls {
+                    margin: 20px auto;
                     text-align: center;
-                    margin-top: 35px;
-                    color: #555;
                 }
-
+                .controls select,
                 .print-btn {
-                    display: block;
-                    margin: 25px auto;
-                    padding: 10px 25px;
+                    padding: 10px 18px;
+                    border-radius: 5px;
+                    font-size: 14px;
+                }
+                .print-btn {
+                    margin-left: 10px;
                     background: #d4145a;
                     color: white;
                     border: none;
-                    border-radius: 6px;
                     cursor: pointer;
-                    font-size: 16px;
                 }
-
+                @page {
+                    size: A4;
+                    margin: 12mm;
+                }
                 @media print {
-                    .print-btn {
+                    body {
+                        padding: 0;
+                        background: white;
+                    }
+                    .memo {
+                        max-width: none;
+                        padding: 0;
+                        border: none;
+                    }
+                    .controls {
                         display: none;
                     }
-
-                    body {
-                        padding: 10px;
-                    }
                 }
-
             </style>
         </head>
-
         <body>
-
-            <div class="receipt">
-
+            <div class="memo">
                 <div class="header">
-
-                    <h1>🌸 SR সাজঘর</h1>
-
-                    <p>
-                        Fashion & Beauty
-                    </p>
-
-                    <p>
-                        আপনার পছন্দ, আমাদের দায়িত্ব ❤️
-                    </p>
-
+                    <h1>SR Sajghor</h1>
+                    <h2>Fashion & Beauty</h2>
+                    <p>থ্রি-পিস • ড্রেস • কসমেটিকস • ফ্যাশন</p>
+                    <p>মোবাইল: 01619871953 | 01403608152</p>
                 </div>
-
-                <div class="info">
-
-                    <strong>📦 Order ID:</strong>
-                    ${orderData.orderId}
-
-                    <br>
-
-                    <strong>👤 নাম:</strong>
-                    ${orderData.name || ""}
-
-                    <br>
-
-                    <strong>📱 ফোন:</strong>
-                    ${orderData.phone || ""}
-
-                    <br>
-
-                    <strong>🏠 ঠিকানা:</strong>
-                    ${orderData.address || ""}
-
-                    <br>
-
-                    <strong>📝 নোট:</strong>
-                    ${orderData.note || "নেই"}
-                    
-                    <br>
-
-                    <strong>💳 পেমেন্ট পদ্ধতি:</strong>
-                    ${getReceiptPaymentMethod(orderData.paymentMethod)}
-
-                    <br>
-
-                    <strong>📱 পেমেন্ট নম্বর:</strong>
-                    ${orderData.paymentSenderPhone || "প্রযোজ্য নয়"}
-
-                    <br>
-
-                    <strong>🧾 Transaction ID:</strong>
-                    ${orderData.transactionId || "প্রযোজ্য নয়"}
-
-                    <br>
-
-                    <strong>🔍 পেমেন্টের অবস্থা:</strong>
-                    ${
-                        orderData.paymentStatus === "pending_verification"
-                            ? "যাচাই বাকি"
-                            : orderData.paymentStatus === "due_on_delivery"
-                                ? "ডেলিভারির সময় পরিশোধ"
-                                : orderData.paymentStatus === "verified"
-                                    ? "পেমেন্ট যাচাই হয়েছে"
-                                    : "তথ্য পাওয়া যায়নি"
-                    }
+                <div class="memo-title">
+                    <h2>CASH MEMO</h2>
                 </div>
-
-                <h3>🛍️ পণ্যসমূহ</h3>
-
-                <div class="products">
-                    ${productsHTML}
-                </div>
-
-                <div class="total">
-
-                    <div class="amount-summary">
-
-                        <span id="amountInWords">
-                            Two Hundred Taka Only
-                        </span>
-
-                        <strong>
-                            Total: ৳ ${total.toLocaleString("en-BD")}
-                        </strong>
-
+                <div class="details">
+                    <div>
+                        <strong>Memo No:</strong>
+                        ${escapeHTML(orderData.orderId)}
+                        <br>
+                        <strong>তারিখ:</strong>
+                        ${formattedDate}
                     </div>
-
+                    <div>
+                        <strong>ক্রেতার নাম:</strong>
+                        ${escapeHTML(orderData.name)}
+                        <br>
+                        <strong>মোবাইল:</strong>
+                        ${escapeHTML(orderData.phone)}
+                        <br>
+                        <strong>ঠিকানা:</strong>
+                        ${escapeHTML(orderData.address)}
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>পণ্যের বিবরণ</th>
+                            <th>পরিমাণ</th>
+                            <th>একক মূল্য</th>
+                            <th>মোট মূল্য</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${productsHTML}
+                    </tbody>
+                </table>
+                <div class="summary">
+                    <div>
+                        মোট পণ্য: ${formatMoney(totalQuantity)} পিস
+                    </div>
+                    <div class="grand-total">
+                        সর্বমোট: ৳ ${formatMoney(total)}
+                    </div>
+                    <div id="amountInWords"></div>
+                </div>
+                <div class="payment">
+                    <strong>পেমেন্টের তথ্য</strong><br>
+                    পেমেন্ট পদ্ধতি: ${paymentMethod}<br>
+                    পেমেন্ট নম্বর:
+                    ${escapeHTML(orderData.paymentSenderPhone || "প্রযোজ্য নয়")}<br>
+                    Transaction ID:
+                    ${escapeHTML(orderData.transactionId || "প্রযোজ্য নয়")}<br>
+                    পেমেন্ট অবস্থা: ${paymentStatus}
+                </div>
+                ${orderData.note ? `
+                    <div class="payment">
+                        <strong>বিশেষ নোট:</strong>
+                        ${escapeHTML(orderData.note)}
+                    </div>
+                ` : ""}
+                <div class="signatures">
+                    <div class="signature">ক্রেতার স্বাক্ষর</div>
+                    <div class="signature">বিক্রেতার স্বাক্ষর</div>
+                </div>
+                <div class="thanks">
+                    ধন্যবাদ আমাদের সাথে কেনাকাটা করার জন্য।
                     <br>
-
-                    <label for="receiptLanguage">
-                        Select Language:
-                    </label>
-
+                    <strong>SR Sajghor Fashion & Beauty</strong>
+                </div>
+                <div class="controls">
+                    <label for="receiptLanguage">ভাষা:</label>
                     <select id="receiptLanguage">
                         ${languageOptions}
                     </select>
-
+                    <button class="print-btn" onclick="window.print()">
+                        Print Cash Memo
+                    </button>
                 </div>
-
-                <div class="thanks">
-
-                    ধন্যবাদ আমাদের সাথে কেনাকাটা করার জন্য। ❤️
-
-                    <br><br>
-
-                    SR Sajghor Fashion & Beauty
-
-                </div>
-
-                <button
-                    class="print-btn"
-                    onclick="window.print()"
-                >
-                    🖨️ Print
-                </button>
-
             </div>
-
         </body>
         </html>
     `);
-
-    // ================= RECEIPT LANGUAGE CHANGE =================
-
-const receiptLanguageSelect =
-    printWindow.document.getElementById("receiptLanguage");
-
-const amountInWordsElement =
-    printWindow.document.getElementById("amountInWords");
-
-function updateAmountInWords() {
-
-    const selectedLanguage = receiptLanguageSelect.value;
-
-    let words = "";
-
-    if (selectedLanguage === "en") {
-        words = numberToWordsEnglish(total);
+    const receiptLanguageSelect =
+        printWindow.document.getElementById("receiptLanguage");
+    const amountInWordsElement =
+        printWindow.document.getElementById("amountInWords");
+    function updateAmountInWords() {
+        const selectedLanguage = receiptLanguageSelect.value;
+        let words = "";
+        if (selectedLanguage === "en") {
+            words = numberToWordsEnglish(total);
+        } else if (selectedLanguage === "bn") {
+            words = numberToWordsBangla(total);
+        } else if (selectedLanguage === "ar") {
+            words = numberToWordsArabic(total);
+        } else if (selectedLanguage === "hi") {
+            words = numberToWordsHindi(total);
+        }
+        amountInWordsElement.textContent = words;
     }
-
-    else if (selectedLanguage === "bn") {
-        words = numberToWordsBangla(total);
-     }
-    else if (selectedLanguage === "ar") {
-        words = numberToWordsArabic(total);
-  }
-    else if (selectedLanguage === "hi") {
-        words = numberToWordsHindi(total);
-    }
-    amountInWordsElement.textContent = words;
-}
-
-receiptLanguageSelect.addEventListener(
-    "change",
-    updateAmountInWords
-);
-
-updateAmountInWords();
-
+    receiptLanguageSelect.value = "bn";
+    receiptLanguageSelect.addEventListener(
+        "change",
+        updateAmountInWords
+    );
+    updateAmountInWords();
     printWindow.document.close();
 }
 </script>
 
-<!-- ================= VIDEO MANAGEMENT ================= -->
+<!-- ================= SPECIAL OFFER MANAGEMENT ================= -->
+<section style="
+    margin:30px 0;
+    padding:25px;
+    background:#fff8fc;
+    border:2px solid #f3c4dc;
+    border-radius:15px;
+">
+    <h2 style="color:#d4145a;">🔥 Special Offer Management</h2>
+    <p>ওয়েবসাইটে Special Offer ব্যানার চালু বা বন্ধ করুন।</p>
+    <p id="offerStatus" style="font-weight:bold;">
+        ⏳ Offer Status লোড হচ্ছে...
+    </p>
+    <button type="button" id="offerOnButton" onclick="updateSpecialOffer(true)"
+        style="padding:12px 22px;background:#168a45;color:white;border:0;border-radius:8px;cursor:pointer;">
+        🟢 Offer ON
+    </button>
+    <button type="button" id="offerOffButton" onclick="updateSpecialOffer(false)"
+        style="padding:12px 22px;background:#c62828;color:white;border:0;border-radius:8px;cursor:pointer;">
+        🔴 Offer OFF
+    </button>
+    <p id="offerMessage" style="margin-top:12px;"></p>
+</section><!-- ================= SMART PRODUCT OFFER MANAGEMENT ================= -->
+<section id="smartProductOfferSection" style="
+    margin:30px 0;
+    padding:25px;
+    background:#fff8fc;
+    border:2px solid #e8b7d0;
+    border-radius:15px;
+">
+    <h2 style="color:#d4145a;">🏷️ Product Wise Smart Offer</h2>
+    <p>যে পণ্যে অফার দিতে চান সেটি নির্বাচন করে অফারের দাম ও তারিখ দিন।</p>
+    <div id="smartOfferProducts">
+        <p>⏳ পণ্যের তালিকা লোড হচ্ছে...</p>
+    </div>
+    <p id="smartOfferMessage" style="font-weight:bold;margin-top:15px;"></p>
+</section><!-- ================= VIDEO MANAGEMENT ================= -->
 
 <section style="
     margin:30px 0;
@@ -2979,6 +3030,249 @@ async function loadCustomers() {
 }
 
 
+// ================= SPECIAL OFFER CONTROL =================
+async function loadSpecialOfferSettings() {
+    const status = document.getElementById("offerStatus");
+    try {
+        const response = await fetch("/api/offer-settings");
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error("Offer status loading failed");
+        }
+        status.textContent = data.active
+            ? "🟢 Special Offer বর্তমানে চালু আছে।"
+            : "🔴 Special Offer বর্তমানে বন্ধ আছে।";
+    } catch (error) {
+        console.error("Offer loading error:", error);
+        status.textContent =
+            "❌ Offer Status লোড করা যায়নি।";
+    }
+}
+async function updateSpecialOffer(active) {
+    const status = document.getElementById("offerStatus");
+    const message = document.getElementById("offerMessage");
+    try {
+        message.textContent = "⏳ সেটিং সংরক্ষণ হচ্ছে...";
+        const response = await fetch("/api/offer-settings", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ active: active })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || "Offer update failed");
+        }
+        status.textContent = active
+            ? "🟢 Special Offer বর্তমানে চালু আছে।"
+            : "🔴 Special Offer বর্তমানে বন্ধ আছে।";
+        message.textContent = active
+            ? "✅ Special Offer চালু হয়েছে।"
+            : "✅ Special Offer বন্ধ হয়েছে।";
+    } catch (error) {
+        console.error("Offer update error:", error);
+        message.textContent =
+            "❌ সেটিং পরিবর্তন হয়নি। Admin Login পরীক্ষা করুন।";
+    }
+}
+// ================= SMART PRODUCT OFFER FUNCTIONS =================
+async function loadSmartProductOffers() {
+    const container = document.getElementById("smartOfferProducts");
+    try {
+        container.textContent = "⏳ পণ্যের তালিকা লোড হচ্ছে...";
+        const response = await fetch("/api/products", {
+            credentials: "include"
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success || !Array.isArray(data.products)) {
+            throw new Error("Product loading failed");
+        }
+        container.innerHTML = "";
+        if (data.products.length === 0) {
+            container.textContent = "কোনো পণ্য পাওয়া যায়নি।";
+            return;
+        }
+        data.products.forEach(product => {
+            const card = document.createElement("div");
+            card.dataset.productId = product.id;
+            card.style.cssText = `
+                background:white;
+                border:1px solid #e8c6d8;
+                border-radius:12px;
+                padding:18px;
+                margin:15px 0;
+            `;
+            const title = document.createElement("h3");
+            title.textContent = product.name || "Unnamed Product";
+            const original = document.createElement("p");
+            original.textContent = "মূল দাম: ৳ " + Number(product.price);
+            const stock = document.createElement("p");
+            stock.textContent = "Stock: " + Number(product.stock || 0);
+            const checkboxLabel = document.createElement("label");
+            checkboxLabel.style.cssText = "display:block;margin:12px 0;font-weight:bold;";
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.className = "smart-offer-enabled";
+            checkbox.checked = Number(product.offerPrice) > 0;
+            checkboxLabel.appendChild(checkbox);
+            checkboxLabel.appendChild(
+                document.createTextNode(" এই পণ্যে Special Offer চালু করুন")
+            );
+            const fields = document.createElement("div");
+            fields.className = "smart-offer-fields";
+            fields.style.cssText = `
+                display:grid;
+                grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+                gap:12px;
+                margin:12px 0;
+            `;
+            const priceInput = document.createElement("input");
+            priceInput.type = "number";
+            priceInput.min = "1";
+            priceInput.placeholder = "Offer Price";
+            priceInput.className = "smart-offer-price";
+            priceInput.value = product.offerPrice || "";
+            const startInput = document.createElement("input");
+            startInput.type = "date";
+            startInput.className = "smart-offer-start";
+            startInput.value = product.offerStart || "";
+            const endInput = document.createElement("input");
+            endInput.type = "date";
+            endInput.className = "smart-offer-end";
+            endInput.value = product.offerEnd || "";
+            [priceInput, startInput, endInput].forEach(input => {
+                input.style.cssText = `
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:11px;
+                    border:1px solid #ccc;
+                    border-radius:7px;
+                `;
+                fields.appendChild(input);
+            });
+            const saveButton = document.createElement("button");
+            saveButton.type = "button";
+            saveButton.textContent = "💾 Offer Save";
+            saveButton.style.cssText = `
+                padding:10px 18px;
+                background:#168a45;
+                color:white;
+                border:0;
+                border-radius:7px;
+                cursor:pointer;
+                margin-right:8px;
+            `;
+            saveButton.addEventListener("click", () => {
+                saveProductOffer(product.id);
+            });
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.textContent = "🗑️ Offer Remove";
+            deleteButton.style.cssText = `
+                padding:10px 18px;
+                background:#c62828;
+                color:white;
+                border:0;
+                border-radius:7px;
+                cursor:pointer;
+            `;
+            deleteButton.addEventListener("click", () => {
+                removeProductOffer(product.id);
+            });
+            checkbox.addEventListener("change", () => {
+                fields.style.display = checkbox.checked ? "grid" : "none";
+            });
+            fields.style.display = checkbox.checked ? "grid" : "none";
+            card.appendChild(title);
+            card.appendChild(original);
+            card.appendChild(stock);
+            card.appendChild(checkboxLabel);
+            card.appendChild(fields);
+            card.appendChild(saveButton);
+            card.appendChild(deleteButton);
+            container.appendChild(card);
+        });
+    } catch (error) {
+        console.error("Smart Offer Product Loading Error:", error);
+        container.textContent = "❌ পণ্যের তালিকা লোড করা যায়নি।";
+    }
+}
+async function saveProductOffer(productId) {
+    const card = document.querySelector(
+        '[data-product-id="' + productId + '"]'
+    );
+    if (!card) return;
+    const enabled = card.querySelector(".smart-offer-enabled");
+    if (!enabled.checked) {
+        alert("আগে Offer চালু করার Checkbox নির্বাচন করুন।");
+        return;
+    }
+    const offerPrice = card.querySelector(".smart-offer-price").value;
+    const offerStart = card.querySelector(".smart-offer-start").value;
+    const offerEnd = card.querySelector(".smart-offer-end").value;
+    if (!offerPrice || !offerStart || !offerEnd) {
+        alert("Offer Price এবং শুরু ও শেষের তারিখ পূরণ করুন।");
+        return;
+    }
+    try {
+        const response = await fetch(
+            "/api/products/" + encodeURIComponent(productId) + "/offer",
+            {
+                method: "PUT",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    offerPrice: offerPrice,
+                    offerStart: offerStart,
+                    offerEnd: offerEnd
+                })
+            }
+        );
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || "Offer Save Failed");
+        }
+        document.getElementById("smartOfferMessage").textContent =
+            "✅ " + data.message;
+        await loadSmartProductOffers();
+    } catch (error) {
+        console.error("Product Offer Save Error:", error);
+        document.getElementById("smartOfferMessage").textContent =
+            "❌ " + error.message;
+    }
+}
+async function removeProductOffer(productId) {
+    if (!confirm("এই পণ্যের Special Offer মুছে ফেলবেন?")) {
+        return;
+    }
+    try {
+        const response = await fetch(
+            "/api/products/" + encodeURIComponent(productId) + "/offer",
+            {
+                method: "DELETE",
+                credentials: "include"
+            }
+        );
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || "Offer Remove Failed");
+        }
+        document.getElementById("smartOfferMessage").textContent =
+            "✅ " + data.message;
+        await loadSmartProductOffers();
+    } catch (error) {
+        console.error("Product Offer Remove Error:", error);
+        document.getElementById("smartOfferMessage").textContent =
+            "❌ " + error.message;
+    }
+}
+loadSmartProductOffers();
+// ================= END SMART PRODUCT OFFER FUNCTIONS =================
+loadSpecialOfferSettings();
 </script>
 
 </body>
