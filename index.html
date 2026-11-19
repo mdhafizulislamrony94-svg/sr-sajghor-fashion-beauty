@@ -680,7 +680,7 @@
 
     background: white;
 
-    z-index: 2000;
+    z-index: 99999;
 
     box-shadow: -10px 0 35px rgba(0,0,0,0.18);
 
@@ -729,6 +729,10 @@
     font-size: 18px;
 
     cursor: pointer;
+transform: none;
+    position: relative;
+    z-index: 2005;
+    flex-shrink: 0;
 }
 
 .cart-items {
@@ -1901,7 +1905,11 @@ async function loadVideos() {
 
     const gallery = document.getElementById("videoGallery");
 
-    try {
+        const videoSection = document.querySelector(".video-section");
+
+    videoSection.style.display = "none";
+
+try {
 
         const response = await fetch("/api/videos");
         const data = await response.json();
@@ -1913,6 +1921,8 @@ async function loadVideos() {
 
             return;
         }
+
+                videoSection.style.display = "block";
 
         gallery.innerHTML = "";
 
@@ -2043,7 +2053,7 @@ loadVideos();
 </header>
 
 <!-- SPECIAL OFFER BANNER -->
-<section class="special-offer">
+<section class="special-offer" id="specialOfferBanner" style="display:none;">
     <div class="offer-content">
         <span class="offer-badge">🔥 SPECIAL OFFER</span>
 
@@ -2059,7 +2069,24 @@ loadVideos();
     </div>
 </section>
 
-<!-- ================= HERO ================= -->
+<script>
+async function loadSpecialOffer() {
+    const banner = document.getElementById("specialOfferBanner");
+    try {
+        const response = await fetch("/api/offer-settings");
+        const data = await response.json();
+        if (data.success && data.active === true) {
+            banner.style.display = "block";
+        } else {
+            banner.style.display = "none";
+        }
+    } catch (error) {
+        console.error("Special Offer loading error:", error);
+        banner.style.display = "none";
+    }
+}
+loadSpecialOffer();
+</script><!-- ================= HERO ================= -->
 
 <section class="hero">
 
@@ -2396,9 +2423,21 @@ if (customerOrderId) {
                             </div>
 
 
-                            <p class="price">
-                                ৳ ${product.price}
-                            </p>
+                            <div class="price">
+    ${product.offerActive ? `
+        <span style="text-decoration:line-through;color:#888;font-size:14px;">
+            ৳ ${product.originalPrice}
+        </span>
+        <strong style="color:#d4145a;font-size:21px;margin-left:7px;">
+            ৳ ${product.effectivePrice}
+        </strong>
+        <span style="display:inline-block;background:#d4145a;color:white;padding:3px 8px;border-radius:12px;font-size:12px;margin-left:5px;">
+            ${product.discountPercent}% ছাড়
+        </span>
+    ` : `
+        <strong>৳ ${product.price}</strong>
+    `}
+</div>
 
 
                             <p class="description">
@@ -2473,43 +2512,40 @@ function updateCartCount() {
 } 
 
 function orderProduct(product) {
-
     const stock = Number(product.stock);
-
     if (stock <= 0) {
         alert("❌ এই Product বর্তমানে Stock Out!");
         return;
     }
-
+    const salePrice = Number(
+        product.offerActive
+            ? product.effectivePrice
+            : product.price
+    );
     const existing = cart.find(item => item.id === product.id);
-
     if (existing) {
-
         if (existing.quantity >= stock) {
             alert("❌ যতগুলো Stock আছে তার বেশি নেওয়া যাবে না!");
             return;
         }
-
         existing.quantity += 1;
-
     } else {
-
         cart.push({
             id: product.id,
             name: product.name,
-            price: Number(product.price),
+            price: salePrice,
+            originalPrice: Number(product.originalPrice ?? product.price),
+            offerActive: product.offerActive === true,
+            discountAmount: Number(product.discountAmount || 0),
+            discountPercent: Number(product.discountPercent || 0),
             stock: stock,
             quantity: 1,
             image: product.image || ""
         });
-
     }
-
     updateCartCount();
     renderCart();
-
     alert("🛒 " + product.name + " কার্টে যোগ হয়েছে!");
-
 }
 
 
@@ -2579,9 +2615,22 @@ function renderCart() {
                     ${item.name}
                 </h4>
 
-                <p>
-                    ৳ ${price} × ${quantity}
-                </p>
+                <div style="margin-top:8px;">
+    ${item.offerActive ? `
+        <span style="text-decoration:line-through;color:#888;font-size:13px;">
+            ৳ ${item.originalPrice}
+        </span>
+        <strong style="color:#d4145a;margin-left:7px;">
+            ৳ ${price}
+        </strong>
+        <span style="color:#d4145a;font-size:12px;margin-left:5px;">
+            ${item.discountPercent}% ছাড়
+        </span>
+    ` : `
+        <strong>৳ ${price}</strong>
+    `}
+    × ${quantity}
+</div>
 
                 <div style="
                     display:flex;
